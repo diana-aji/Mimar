@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Web;
 
-use App\Http\Controllers\Controller;
 use App\Models\Favorite;
 use App\Models\Service;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 
 class FavoriteController extends Controller
 {
@@ -29,7 +29,9 @@ class FavoriteController extends Controller
             'service_id' => $service->id,
         ]);
 
-        return back()->with('success', __('messages.created_successfully'));
+        return redirect()
+            ->back()
+            ->with('success', __('messages.created_successfully'));
     }
 
     public function destroy(Request $request, Service $service): RedirectResponse
@@ -39,6 +41,8 @@ class FavoriteController extends Controller
             ->where('service_id', $service->id)
             ->delete();
 
-        return back()->with('success', __('messages.deleted_successfully'));
+        return redirect()
+            ->back()
+            ->with('success', __('messages.deleted_successfully'));
     }
 }

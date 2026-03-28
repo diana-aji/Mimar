@@ -19,9 +19,11 @@ class ServiceResource extends JsonResource
             'description' => $this->description,
             'price' => $this->price,
             'status' => $this->status,
+            'rejection_reason' => $this->rejection_reason,
             'approved_at' => $this->approved_at,
             'rejected_at' => $this->rejected_at,
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
 
             'business_account' => $this->whenLoaded('businessAccount', fn () => [
                 'id' => $this->businessAccount?->id,

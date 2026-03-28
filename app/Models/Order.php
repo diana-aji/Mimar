@@ -14,6 +14,7 @@ class Order extends Model
 
     protected $fillable = [
         'service_id',
+        'user_id',
         'sender_business_account_id',
         'receiver_business_account_id',
         'quantity',
@@ -40,6 +41,11 @@ class Order extends Model
         return $this->belongsTo(Service::class);
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function senderBusinessAccount(): BelongsTo
     {
         return $this->belongsTo(BusinessAccount::class, 'sender_business_account_id');
@@ -49,8 +55,9 @@ class Order extends Model
     {
         return $this->belongsTo(BusinessAccount::class, 'receiver_business_account_id');
     }
+
     public function rating(): HasOne
     {
-    return $this->hasOne(Rating::class);
-   }
+        return $this->hasOne(Rating::class);
+    }
 }

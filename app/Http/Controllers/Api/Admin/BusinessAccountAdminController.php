@@ -5,14 +5,13 @@ namespace App\Http\Controllers\Api\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\BusinessAccount;
-use App\Controllers\Api\ApiController;
-use App\Http\Controllers\Api\ApiController as ApiApiController;
+use App\Http\Controllers\Api\ApiController;
 use App\Services\BusinessAccount\BusinessAccountService;
 use App\Http\Resources\BusinessAccount\BusinessAccountResource;
 use App\Http\Requests\BusinessAccount\ApproveBusinessAccountRequest;
 use App\Http\Requests\BusinessAccount\RejectBusinessAccountRequest;
 
-class BusinessAccountAdminController extends ApiApiController
+class BusinessAccountAdminController extends ApiController
 {
     public function __construct(
         protected BusinessAccountService $service
@@ -31,11 +30,13 @@ class BusinessAccountAdminController extends ApiApiController
                 'per_page' => $items->perPage(),
                 'total' => $items->total(),
             ],
-        ]);
+        ], __('messages.success'));
     }
 
-    public function approve(ApproveBusinessAccountRequest $request, BusinessAccount $businessAccount): JsonResponse
-    {
+    public function approve(
+        ApproveBusinessAccountRequest $request,
+        BusinessAccount $businessAccount
+    ): JsonResponse {
         $businessAccount = $this->service->approve($request->user(), $businessAccount);
 
         return $this->successResponse(
@@ -44,8 +45,10 @@ class BusinessAccountAdminController extends ApiApiController
         );
     }
 
-    public function reject(RejectBusinessAccountRequest $request, BusinessAccount $businessAccount): JsonResponse
-    {
+    public function reject(
+        RejectBusinessAccountRequest $request,
+        BusinessAccount $businessAccount
+    ): JsonResponse {
         $businessAccount = $this->service->reject(
             $request->user(),
             $businessAccount,

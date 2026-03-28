@@ -8,10 +8,10 @@
 
     <style>
         :root {
-            --primary: #6D5DF6;
-            --primary-dark: #5548d9;
-            --sidebar: #111827;
-            --sidebar-soft: #1f2937;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --sidebar: #0f172a;
+            --sidebar-soft: #1e293b;
             --bg-main: #f7f8fc;
             --white: #ffffff;
             --text-main: #111827;
@@ -56,7 +56,7 @@
             width: 44px;
             height: 44px;
             border-radius: 14px;
-            background: linear-gradient(135deg, #6D5DF6, #8d81ff);
+            background: linear-gradient(135deg, #2563eb, #60a5fa);
             display: grid;
             place-items: center;
             font-weight: 800;
@@ -73,9 +73,26 @@
             margin-top: 2px;
         }
 
+        .admin-role-badge {
+            margin-top: 18px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.08);
+            font-size: 12px;
+            color: rgba(255,255,255,0.84);
+            line-height: 1.8;
+        }
+
+        .admin-role-badge strong {
+            color: white;
+            font-size: 13px;
+        }
+
         .admin-nav {
             display: grid;
             gap: 8px;
+            margin-top: 18px;
         }
 
         .admin-nav a {
@@ -91,6 +108,17 @@
         .admin-nav a.active {
             background: rgba(255,255,255,0.08);
             color: white;
+        }
+
+        .admin-nav-group-title {
+            margin-top: 14px;
+            margin-bottom: 6px;
+            padding-inline: 6px;
+            color: rgba(255,255,255,0.55);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
         }
 
         .admin-sidebar-footer {
@@ -167,13 +195,6 @@
             font-size: 13px;
         }
 
-        .admin-page-card {
-            background: white;
-            border-radius: 24px;
-            box-shadow: var(--shadow-soft);
-            padding: 24px;
-        }
-
         @media (max-width: 992px) {
             .admin-layout {
                 grid-template-columns: 1fr;
@@ -192,6 +213,8 @@
 <body>
     @php
         $isArabic = app()->getLocale() === 'ar';
+        $user = auth()->user();
+        $roleName = $user?->getRoleNames()?->first();
     @endphp
 
     <div class="admin-layout">
@@ -206,35 +229,89 @@
                 </div>
             </a>
 
+            <div class="admin-role-badge">
+                <div>{{ $isArabic ? 'الحساب الحالي' : 'Current account' }}</div>
+                <strong>{{ $user?->name ?? '—' }}</strong>
+                <div>
+                    {{ $isArabic ? 'الدور:' : 'Role:' }}
+                    <strong>{{ $roleName ?? '—' }}</strong>
+                </div>
+            </div>
+
             <nav class="admin-nav">
+                <div class="admin-nav-group-title">{{ $isArabic ? 'الرئيسية' : 'Main' }}</div>
+
                 <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     {{ $isArabic ? 'لوحة التحكم' : 'Dashboard' }}
                 </a>
 
-                <a href="{{ route('admin.services.index') }}" class="{{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
-                 {{ $isArabic ? 'الخدمات' : 'Services' }}
-               </a>
+                @can('view-users')
+                    <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                        {{ $isArabic ? 'المستخدمون' : 'Users' }}
+                    </a>
+                @endcan
 
-                <a href="{{ route('admin.business-accounts.index') }}" class="{{ request()->routeIs('admin.business-accounts.*') ? 'active' : '' }}">
-                     {{ $isArabic ? 'حسابات الأعمال' : 'Business Accounts' }}
-                 </a>
+                @can('view-roles')
+                    <a href="{{ route('admin.roles.index') }}" class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                        {{ $isArabic ? 'إدارة الأدوار' : 'Roles' }}
+                    </a>
+                @endcan
 
-                <a href="{{ route('estimations.create') }}" class="{{ request()->routeIs('estimations.*') ? 'active' : '' }}">
-                    {{ $isArabic ? 'التقدير الذكي' : 'Estimations' }}
-                </a>
+                <div class="admin-nav-group-title">{{ $isArabic ? 'الإدارة' : 'Management' }}</div>
 
-                <a href="{{ route('orders.index') }}" class="{{ request()->routeIs('orders.*') ? 'active' : '' }}">
-                    {{ $isArabic ? 'الطلبات' : 'Orders' }}
+                @can('view-categories')
+                    <a href="{{ route('admin.categories.index') }}" class="{{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
+                        {{ $isArabic ? 'التصنيفات' : 'Categories' }}
+                    </a>
+                @endcan
+
+                @can('view-subcategories')
+                    <a href="{{ route('admin.subcategories.index') }}" class="{{ request()->routeIs('admin.subcategories.*') ? 'active' : '' }}">
+                        {{ $isArabic ? 'التصنيفات الفرعية' : 'Subcategories' }}
+                    </a>
+                @endcan
+
+                @can('view-cities')
+                    <a href="{{ route('admin.cities.index') }}" class="{{ request()->routeIs('admin.cities.*') ? 'active' : '' }}">
+                        {{ $isArabic ? 'المدن' : 'Cities' }}
+                    </a>
+                @endcan
+
+                @can('view-sliders')
+                    <a href="{{ route('admin.sliders.index') }}" class="{{ request()->routeIs('admin.sliders.*') ? 'active' : '' }}">
+                        {{ $isArabic ? 'السلايدر' : 'Sliders' }}
+                    </a>
+                @endcan
+
+                @can('view-services')
+                    <a href="{{ route('admin.services.index') }}" class="{{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
+                        {{ $isArabic ? 'الخدمات' : 'Services' }}
+                    </a>
+                @endcan
+
+                @can('view-business-accounts')
+                    <a href="{{ route('admin.business-accounts.index') }}" class="{{ request()->routeIs('admin.business-accounts.*') ? 'active' : '' }}">
+                        {{ $isArabic ? 'حسابات الأعمال' : 'Business Accounts' }}
+                    </a>
+                @endcan
+
+                @can('view-reports')
+                    <a href="{{ route('admin.reports.index') }}" class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                        {{ $isArabic ? 'البلاغات' : 'Reports' }}
+                    </a>
+                @endcan
+
+                <div class="admin-nav-group-title">{{ $isArabic ? 'أدوات إضافية' : 'Utilities' }}</div>
+
+                @can('view-estimation-types')
+                    <a href="{{ route('estimations.create') }}" class="{{ request()->routeIs('estimations.*') ? 'active' : '' }}">
+                        {{ $isArabic ? 'التقدير الذكي' : 'Estimations' }}
+                    </a>
+                @endcan
+
+                <a href="{{ route('home') }}" class="admin-topbar-btn">
+                    {{ $isArabic ? 'الواجهة الرئيسية' : 'Home' }}
                 </a>
-                <a href="{{ route('admin.cities.index') }}" class="{{ request()->routeIs('admin.cities.*') ? 'active' : '' }}">
-                 {{ $isArabic ? 'المدن' : 'Cities' }}
-               </a>
-                <a href="{{ route('notifications.index') }}" class="{{ request()->routeIs('notifications.*') ? 'active' : '' }}">
-                    {{ $isArabic ? 'الإشعارات' : 'Notifications' }}
-                </a>
-                <a href="{{ route('admin.reports.index') }}" class="{{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
-                   {{ $isArabic ? 'البلاغات' : 'Reports' }}
-               </a>
             </nav>
 
             <div class="admin-sidebar-footer">
@@ -263,8 +340,8 @@
                 </div>
 
                 <div class="admin-topbar-actions">
-                    <a href="{{ route('dashboard') }}" class="admin-topbar-btn">
-                        {{ $isArabic ? 'الرئيسية' : 'Home' }}
+                    <a href="{{ route('home') }}" class="admin-topbar-btn">
+                        {{ $isArabic ? 'الواجهة الرئيسية' : 'Home' }}
                     </a>
 
                     <a href="{{ route('lang.switch', $isArabic ? 'en' : 'ar') }}" class="admin-topbar-btn">

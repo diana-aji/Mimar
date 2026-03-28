@@ -9,12 +9,17 @@ class UpdateBusinessAccountRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $businessAccount = $this->route('businessAccount');
+
+        return $this->user() !== null
+            && $businessAccount !== null
+            && (int) $businessAccount->user_id === (int) $this->user()->id;
     }
 
     public function rules(): array
     {
-        $businessAccountId = $this->route('business_account')?->id ?? $this->route('business_account');
+        $businessAccount = $this->route('businessAccount');
+        $businessAccountId = $businessAccount?->id;
 
         return [
             'business_activity_type_id' => ['required', 'exists:business_activity_types,id'],
@@ -39,6 +44,23 @@ class UpdateBusinessAccountRequest extends FormRequest
             'documents.*.file_name' => ['nullable', 'string', 'max:255'],
             'documents.*.file_path' => ['required_with:documents', 'string', 'max:255'],
             'documents.*.document_type' => ['nullable', 'string', 'max:100'],
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'business_activity_type_id' => __('messages.attributes.business_activity_type'),
+            'city_id' => __('messages.attributes.city'),
+            'license_number' => __('messages.attributes.license_number'),
+            'name_ar' => __('messages.attributes.name_ar'),
+            'name_en' => __('messages.attributes.name_en'),
+            'activities' => __('messages.attributes.activities'),
+            'details' => __('messages.attributes.details'),
+            'latitude' => __('messages.attributes.latitude'),
+            'longitude' => __('messages.attributes.longitude'),
+            'images' => __('messages.attributes.images'),
+            'documents' => __('messages.attributes.documents'),
         ];
     }
 }

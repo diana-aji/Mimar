@@ -19,6 +19,14 @@
                 : ($business->name_en ?? $business->name_ar ?? '—');
         };
 
+        $resolveUserName = function ($user) use ($isArabic) {
+            if (! $user) {
+                return $isArabic ? 'مستخدم غير معروف' : 'Unknown user';
+            }
+
+            return $user->name ?? ($isArabic ? 'مستخدم' : 'User');
+        };
+
         $resolveServiceName = function ($service) use ($isArabic) {
             if (! $service) {
                 return $isArabic ? 'خدمة غير معروفة' : 'Unknown service';
@@ -34,7 +42,7 @@
                 'accepted' => $isArabic ? 'مقبول' : 'Accepted',
                 'rejected' => $isArabic ? 'مرفوض' : 'Rejected',
                 'cancelled' => $isArabic ? 'ملغي' : 'Cancelled',
-                default => $isArabic ? 'قيد التنفيذ' : 'In progress',
+                default => $isArabic ? 'قيد المراجعة' : 'Pending',
             };
         };
 
@@ -53,11 +61,7 @@
     @endphp
 
     <style>
-        .orders-shell {
-            display: grid;
-            gap: 22px;
-        }
-
+        .orders-shell { display:grid; gap:22px; }
         .orders-hero {
             position: relative;
             overflow: hidden;
@@ -69,7 +73,6 @@
             padding: 28px;
             box-shadow: 0 24px 54px rgba(17,24,39,0.20);
         }
-
         .orders-hero::before {
             content: "";
             position: absolute;
@@ -81,7 +84,6 @@
             mask-image: linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,.9));
             pointer-events: none;
         }
-
         .orders-hero-inner {
             position: relative;
             z-index: 1;
@@ -90,7 +92,6 @@
             gap: 20px;
             align-items: end;
         }
-
         .orders-kicker {
             display: inline-flex;
             align-items: center;
@@ -103,7 +104,6 @@
             font-size: 12px;
             font-weight: 700;
         }
-
         .orders-kicker::before {
             content: "";
             width: 8px;
@@ -111,7 +111,6 @@
             border-radius: 50%;
             background: #d1a763;
         }
-
         .orders-title {
             margin: 0 0 10px;
             font-size: 42px;
@@ -119,7 +118,6 @@
             letter-spacing: -0.04em;
             font-weight: 800;
         }
-
         .orders-copy {
             margin: 0;
             color: rgba(255,255,255,0.84);
@@ -127,14 +125,12 @@
             line-height: 1.9;
             max-width: 720px;
         }
-
         .orders-actions {
             margin-top: 18px;
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
-
         .orders-btn-primary,
         .orders-btn-secondary {
             height: 46px;
@@ -147,18 +143,15 @@
             font-size: 14px;
             font-weight: 800;
         }
-
         .orders-btn-primary {
             background: white;
             color: #1f2f4d;
         }
-
         .orders-btn-secondary {
             background: rgba(255,255,255,0.10);
             border: 1px solid rgba(255,255,255,0.16);
             color: white;
         }
-
         .orders-side {
             background: rgba(255,255,255,0.08);
             border: 1px solid rgba(255,255,255,0.10);
@@ -166,18 +159,12 @@
             padding: 18px;
             backdrop-filter: blur(10px);
         }
-
         .orders-side h3 {
             margin: 0 0 12px;
             font-size: 18px;
             font-weight: 800;
         }
-
-        .orders-side-list {
-            display: grid;
-            gap: 10px;
-        }
-
+        .orders-side-list { display: grid; gap: 10px; }
         .orders-side-item {
             display: flex;
             align-items: center;
@@ -186,19 +173,16 @@
             color: rgba(255,255,255,0.84);
             font-size: 14px;
         }
-
         .orders-side-item strong {
             color: white;
             font-size: 20px;
         }
-
         .orders-grid {
             display: grid;
             grid-template-columns: 1.1fr 0.9fr;
             gap: 20px;
             align-items: start;
         }
-
         .panel-card,
         .summary-card,
         .order-card {
@@ -207,12 +191,8 @@
             border-radius: 26px;
             box-shadow: 0 12px 30px rgba(15,23,42,0.05);
         }
-
         .panel-card,
-        .summary-card {
-            padding: 22px;
-        }
-
+        .summary-card { padding: 22px; }
         .panel-header {
             display: flex;
             align-items: center;
@@ -221,7 +201,6 @@
             flex-wrap: wrap;
             margin-bottom: 16px;
         }
-
         .panel-title {
             margin: 0;
             font-size: 24px;
@@ -229,14 +208,12 @@
             font-weight: 800;
             color: #24304d;
         }
-
         .tabs-row {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
             margin-bottom: 18px;
         }
-
         .tab-pill {
             height: 38px;
             padding: 0 14px;
@@ -251,22 +228,13 @@
             font-weight: 700;
             text-decoration: none;
         }
-
         .tab-pill.active {
             background: linear-gradient(135deg, #4458db 0%, #243873 100%);
             color: white;
             box-shadow: 0 14px 26px rgba(36,56,115,0.16);
         }
-
-        .orders-list {
-            display: grid;
-            gap: 16px;
-        }
-
-        .order-card {
-            padding: 20px;
-        }
-
+        .orders-list { display: grid; gap: 16px; }
+        .order-card { padding: 20px; }
         .order-head {
             display: flex;
             align-items: flex-start;
@@ -275,20 +243,17 @@
             flex-wrap: wrap;
             margin-bottom: 10px;
         }
-
         .order-title {
             margin: 0 0 6px;
             font-size: 20px;
             font-weight: 800;
             color: #24304d;
         }
-
         .order-sub {
             color: #64748b;
             font-size: 13px;
             line-height: 1.8;
         }
-
         .status-pill-v2 {
             height: 32px;
             padding: 0 12px;
@@ -300,41 +265,34 @@
             font-weight: 700;
             white-space: nowrap;
         }
-
         .status-progress {
             background: rgba(245,158,11,0.12);
             color: #d97706;
         }
-
         .status-complete {
             background: rgba(5,150,105,0.10);
             color: #059669;
         }
-
         .status-rejected {
             background: rgba(239,68,68,0.10);
             color: #dc2626;
         }
-
         .status-cancelled {
             background: rgba(100,116,139,0.12);
             color: #475569;
         }
-
         .order-meta-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
             margin-top: 14px;
         }
-
         .order-meta-box {
             padding: 14px;
             border-radius: 18px;
             background: #f8fafc;
             border: 1px solid rgba(15,23,42,0.06);
         }
-
         .order-meta-box span {
             display: block;
             margin-bottom: 5px;
@@ -342,19 +300,16 @@
             font-size: 12px;
             font-weight: 700;
         }
-
         .order-meta-box strong {
             color: #24304d;
             font-size: 15px;
             font-weight: 800;
         }
-
         .order-timeline {
             margin-top: 16px;
             display: grid;
             gap: 10px;
         }
-
         .timeline-item {
             display: flex;
             align-items: center;
@@ -363,7 +318,6 @@
             font-size: 13px;
             line-height: 1.8;
         }
-
         .timeline-item::before {
             content: "";
             width: 10px;
@@ -372,14 +326,12 @@
             background: #4458db;
             flex-shrink: 0;
         }
-
         .order-actions {
             margin-top: 16px;
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
-
         .mini-btn,
         .mini-btn-ghost,
         .mini-btn-danger {
@@ -395,57 +347,45 @@
             border: none;
             cursor: pointer;
         }
-
         .mini-btn {
             background: linear-gradient(135deg, #4458db 0%, #243873 100%);
             color: white;
             box-shadow: 0 14px 26px rgba(36,56,115,0.16);
         }
-
         .mini-btn-ghost {
             background: #f8fafc;
             color: #334155;
             border: 1px solid rgba(15,23,42,0.08);
         }
-
         .mini-btn-danger {
             background: rgba(239,68,68,0.10);
             color: #dc2626;
             border: 1px solid rgba(239,68,68,0.12);
         }
-
-        .summary-list {
-            display: grid;
-            gap: 14px;
-        }
-
+        .summary-list { display: grid; gap: 14px; }
         .summary-item {
             padding: 16px;
             border-radius: 20px;
             background: #f8fafc;
             border: 1px solid rgba(15,23,42,0.06);
         }
-
         .summary-item strong {
             display: block;
             margin-bottom: 6px;
             font-size: 18px;
             color: #24304d;
         }
-
         .summary-item span {
             color: #64748b;
             font-size: 13px;
             line-height: 1.8;
         }
-
         .summary-cta {
             margin-top: 16px;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-
         .summary-cta a {
             height: 42px;
             border-radius: 999px;
@@ -456,18 +396,15 @@
             font-size: 13px;
             font-weight: 800;
         }
-
         .summary-cta .primary {
             background: linear-gradient(135deg, #4458db 0%, #243873 100%);
             color: white;
         }
-
         .summary-cta .secondary {
             background: #f8fafc;
             color: #334155;
             border: 1px solid rgba(15,23,42,0.08);
         }
-
         .empty-orders {
             padding: 28px;
             border-radius: 22px;
@@ -478,7 +415,6 @@
             line-height: 1.9;
             text-align: center;
         }
-
         .alert-success-order {
             padding: 14px 16px;
             border-radius: 18px;
@@ -489,94 +425,80 @@
             font-weight: 700;
         }
         .rating-box {
-        margin-top: 16px;
-        padding: 16px;
-        border-radius: 18px;
-        background: #fafbff;
-        border: 1px solid rgba(15,23,42,0.06);
-        display: grid;
-        gap: 10px;
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 18px;
+            background: #fafbff;
+            border: 1px solid rgba(15,23,42,0.06);
+            display: grid;
+            gap: 10px;
         }
-
         .rating-box h4 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 800;
-        color: #111827;
+            margin: 0;
+            font-size: 16px;
+            font-weight: 800;
+            color: #111827;
         }
-
-        .rating-form {
-        display: grid;
-        gap: 10px;
-        }
-
+        .rating-form { display: grid; gap: 10px; }
         .rating-form-row {
-        display: grid;
-        grid-template-columns: 140px 1fr;
-        gap: 10px;
-        align-items: start;
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 10px;
+            align-items: start;
         }
-
         .rating-form label {
-        color: #475569;
-        font-size: 13px;
-        font-weight: 700;
-        padding-top: 10px;
+            color: #475569;
+            font-size: 13px;
+            font-weight: 700;
+            padding-top: 10px;
         }
-
         .rating-form select,
         .rating-form textarea {
-        width: 100%;
-        border: 1px solid rgba(15,23,42,0.08);
-        background: white;
-        border-radius: 14px;
-        padding: 12px 14px;
-        font-size: 14px;
-        color: #111827;
-        outline: none;
+            width: 100%;
+            border: 1px solid rgba(15,23,42,0.08);
+            background: white;
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 14px;
+            color: #111827;
+            outline: none;
         }
-
         .rating-form textarea {
-        min-height: 100px;
-        resize: vertical;
+            min-height: 100px;
+            resize: vertical;
         }
-
         .rating-form select:focus,
         .rating-form textarea:focus {
-        border-color: #4458db;
-        box-shadow: 0 0 0 4px rgba(68,88,219,0.10);
+            border-color: #4458db;
+            box-shadow: 0 0 0 4px rgba(68,88,219,0.10);
         }
-
         .rating-note {
-        color: #64748b;
-        font-size: 12px;
-        line-height: 1.8;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.8;
         }
-
         .rating-display {
-        margin-top: 16px;
-        padding: 16px;
-        border-radius: 18px;
-        background: rgba(5,150,105,0.06);
-        border: 1px solid rgba(5,150,105,0.10);
-        display: grid;
-        gap: 8px;
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(5,150,105,0.06);
+            border: 1px solid rgba(5,150,105,0.10);
+            display: grid;
+            gap: 8px;
         }
-
         .rating-score {
-        font-size: 16px;
-        font-weight: 800;
-        color: #059669;
+            font-size: 16px;
+            font-weight: 800;
+            color: #059669;
         }
-
         .alert-error-order {
-        padding: 14px 16px;
-        border-radius: 18px;
-        background: rgba(239,68,68,0.10);
-        color: #dc2626;
-        border: 1px solid rgba(239,68,68,0.12);
-        font-size: 14px;
-        font-weight: 700;
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(239,68,68,0.10);
+            color: #dc2626;
+            border: 1px solid rgba(239,68,68,0.12);
+            font-size: 14px;
+            font-weight: 700;
         }
 
         @media (max-width: 1100px) {
@@ -591,7 +513,8 @@
                 font-size: 30px;
             }
 
-            .order-meta-grid {
+            .order-meta-grid,
+            .rating-form-row {
                 grid-template-columns: 1fr;
             }
 
@@ -651,11 +574,13 @@
                 {{ session('success') }}
             </div>
         @endif
+
         @if (session('error'))
             <div class="alert-error-order">
-             {{ session('error') }}
+                {{ session('error') }}
             </div>
-       @endif
+        @endif
+
         <section class="orders-grid">
             <div class="panel-card">
                 <div class="panel-header">
@@ -681,7 +606,7 @@
                         @foreach ($orders as $order)
                             @php
                                 $serviceName = $resolveServiceName($order->service);
-                                $senderName = $resolveBusinessName($order->senderBusinessAccount);
+                                $senderName = $resolveUserName($order->user);
                                 $receiverName = $resolveBusinessName($order->receiverBusinessAccount);
                             @endphp
 
@@ -793,63 +718,64 @@
                                         </form>
                                     @endif
                                 </div>
-                        @if ($activeTab === 'sent' && $order->status === 'accepted')
-                            @if ($order->rating)
-                                   <div class="rating-display">
-                                     <strong>{{ $isArabic ? 'تم إرسال التقييم' : 'Rating submitted' }}</strong>
-                                     <div class="rating-score">
-                                          {{ $isArabic ? 'التقييم:' : 'Score:' }} {{ $order->rating->score }}/5
-                                     </div>
 
-                                  @if ($order->rating->comment)
-                                  <div>
-                                      <strong>{{ $isArabic ? 'التعليق:' : 'Comment:' }}</strong>
-                                        {{ $order->rating->comment }}
-                                       </div>
+                                @if ($activeTab === 'sent' && $order->status === 'accepted')
+                                    @if ($order->rating)
+                                        <div class="rating-display">
+                                            <strong>{{ $isArabic ? 'تم إرسال التقييم' : 'Rating submitted' }}</strong>
+                                            <div class="rating-score">
+                                                {{ $isArabic ? 'التقييم:' : 'Score:' }} {{ $order->rating->score }}/5
+                                            </div>
+
+                                            @if ($order->rating->comment)
+                                                <div>
+                                                    <strong>{{ $isArabic ? 'التعليق:' : 'Comment:' }}</strong>
+                                                    {{ $order->rating->comment }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <div class="rating-box">
+                                            <h4>{{ $isArabic ? 'إضافة تقييم للخدمة' : 'Add a service rating' }}</h4>
+
+                                            <form method="POST" action="{{ route('ratings.store', $order->id) }}" class="rating-form">
+                                                @csrf
+
+                                                <div class="rating-form-row">
+                                                    <label>{{ $isArabic ? 'التقييم' : 'Score' }}</label>
+                                                    <select name="score" required>
+                                                        <option value="">{{ $isArabic ? 'اختر التقييم' : 'Select score' }}</option>
+                                                        <option value="5">5 - {{ $isArabic ? 'ممتاز' : 'Excellent' }}</option>
+                                                        <option value="4">4 - {{ $isArabic ? 'جيد جدًا' : 'Very Good' }}</option>
+                                                        <option value="3">3 - {{ $isArabic ? 'جيد' : 'Good' }}</option>
+                                                        <option value="2">2 - {{ $isArabic ? 'مقبول' : 'Fair' }}</option>
+                                                        <option value="1">1 - {{ $isArabic ? 'ضعيف' : 'Poor' }}</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="rating-form-row">
+                                                    <label>{{ $isArabic ? 'تعليق' : 'Comment' }}</label>
+                                                    <textarea
+                                                        name="comment"
+                                                        placeholder="{{ $isArabic ? 'اكتب رأيك بالخدمة...' : 'Write your feedback about the service...' }}"
+                                                    >{{ old('comment') }}</textarea>
+                                                </div>
+
+                                                <div class="order-actions" style="margin-top:0;">
+                                                    <button type="submit" class="mini-btn">
+                                                        {{ $isArabic ? 'إرسال التقييم' : 'Submit rating' }}
+                                                    </button>
+                                                </div>
+
+                                                <div class="rating-note">
+                                                    {{ $isArabic
+                                                        ? 'يظهر التقييم فقط للطلبات المقبولة، ويمكن إرسال تقييم واحد فقط لكل طلب.'
+                                                        : 'Ratings are available only for accepted orders, and only one rating can be submitted per order.' }}
+                                                </div>
+                                            </form>
+                                        </div>
+                                    @endif
                                 @endif
-                                 </div>
-                           @else
-                                   <div class="rating-box">
-                                     <h4>{{ $isArabic ? 'إضافة تقييم للخدمة' : 'Add a service rating' }}</h4>
-
-                                   <form method="POST" action="{{ route('ratings.store', $order->id) }}" class="rating-form">
-                          @csrf
-
-                     <div class="rating-form-row">
-                    <label>{{ $isArabic ? 'التقييم' : 'Score' }}</label>
-                    <select name="score" required>
-                        <option value="">{{ $isArabic ? 'اختر التقييم' : 'Select score' }}</option>
-                        <option value="5">5 - {{ $isArabic ? 'ممتاز' : 'Excellent' }}</option>
-                        <option value="4">4 - {{ $isArabic ? 'جيد جدًا' : 'Very Good' }}</option>
-                        <option value="3">3 - {{ $isArabic ? 'جيد' : 'Good' }}</option>
-                        <option value="2">2 - {{ $isArabic ? 'مقبول' : 'Fair' }}</option>
-                        <option value="1">1 - {{ $isArabic ? 'ضعيف' : 'Poor' }}</option>
-                    </select>
-                </div>
-
-                <div class="rating-form-row">
-                    <label>{{ $isArabic ? 'تعليق' : 'Comment' }}</label>
-                    <textarea
-                        name="comment"
-                        placeholder="{{ $isArabic ? 'اكتب رأيك بالخدمة...' : 'Write your feedback about the service...' }}"
-                    >{{ old('comment') }}</textarea>
-                </div>
-
-                <div class="order-actions" style="margin-top:0;">
-                    <button type="submit" class="mini-btn">
-                        {{ $isArabic ? 'إرسال التقييم' : 'Submit rating' }}
-                    </button>
-                </div>
-
-                <div class="rating-note">
-                    {{ $isArabic
-                        ? 'يظهر التقييم فقط للطلبات المقبولة، ويمكن إرسال تقييم واحد فقط لكل طلب.'
-                        : 'Ratings are available only for accepted orders, and only one rating can be submitted per order.' }}
-                </div>
-            </form>
-        </div>
-    @endif
-@endif
                             </article>
                         @endforeach
                     </div>

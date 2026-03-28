@@ -81,13 +81,14 @@ class BusinessAccount extends Model
     {
         return $this->status === BusinessAccountStatus::APPROVED->value;
     }
+
     public function sentOrders(): HasMany
-   {
-    return $this->hasMany(Order::class, 'sender_business_account_id');
+    {
+        return $this->hasMany(Order::class, 'sender_business_account_id');
     }
 
-public function receivedOrders(): HasMany
-   {
-    return $this->hasMany(Order::class, 'receiver_business_account_id');
-   }    
+    public function receivedOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'receiver_business_account_id');
+    }
 }

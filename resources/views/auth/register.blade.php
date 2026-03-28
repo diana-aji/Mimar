@@ -4,12 +4,12 @@
     <x-auth.card
         :title="app()->getLocale() === 'ar' ? 'إنشاء حساب جديد' : 'Create your account'"
         :subtitle="app()->getLocale() === 'ar'
-            ? 'أنشئ حسابك للوصول إلى الخدمات، الطلبات، المحادثات، والتقدير الذكي ضمن تجربة موحدة.'
-            : 'Create your account to access services, requests, conversations, and smart estimation in one unified flow.'"
+            ? 'أنشئ حسابك كمستخدم عادي للوصول إلى الخدمات، الطلبات، المحادثات، والتقدير الذكي.'
+            : 'Create your account as a regular user to access services, requests, conversations, and smart estimation.'"
     >
         <div class="auth-switch">
             <a href="{{ route('login') }}">
-                {{ app()->getLocale() === 'ar' ? 'تسجيل الدخول' : 'Sign in' }}
+                {{ app()->getLocale() === 'ar' ? 'دخول المستخدم' : 'User login' }}
             </a>
             <a href="{{ route('register') }}" class="active">
                 {{ app()->getLocale() === 'ar' ? 'إنشاء حساب' : 'Register' }}
@@ -18,25 +18,6 @@
 
         <form method="POST" action="{{ route('register.submit') }}">
             @csrf
-
-            <div class="form-group">
-                <label class="form-label">
-                    {{ app()->getLocale() === 'ar' ? 'نوع الحساب' : 'Account type' }}
-                </label>
-
-                <select name="account_type" class="form-control custom-input" required>
-                    <option value="user">
-                        {{ app()->getLocale() === 'ar' ? 'مستخدم عادي' : 'Regular User' }}
-                    </option>
-                    <option value="business">
-                        {{ app()->getLocale() === 'ar' ? 'مستخدم أعمال' : 'Business User' }}
-                    </option>
-                </select>
-
-                @error('account_type')
-                    <div class="form-error">{{ $message }}</div>
-                @enderror
-            </div>
 
             <x-auth.input
                 :label="app()->getLocale() === 'ar' ? 'الاسم الكامل' : 'Full name'"
@@ -51,6 +32,14 @@
                 type="email"
                 :placeholder="app()->getLocale() === 'ar' ? 'name@example.com' : 'name@example.com'"
                 icon="✉"
+            />
+
+            <x-auth.input
+                :label="app()->getLocale() === 'ar' ? 'رقم الهاتف' : 'Phone number'"
+                name="phone"
+                type="text"
+                :placeholder="app()->getLocale() === 'ar' ? '09xxxxxxxx' : '09xxxxxxxx'"
+                icon="📱"
             />
 
             <div class="auth-grid-2">
@@ -77,16 +66,16 @@
         </form>
 
         <div class="auth-micro">
-            <span class="auth-chip">{{ app()->getLocale() === 'ar' ? 'خدمات' : 'Services' }}</span>
-            <span class="auth-chip">{{ app()->getLocale() === 'ar' ? 'طلبات' : 'Requests' }}</span>
-            <span class="auth-chip">{{ app()->getLocale() === 'ar' ? 'تقدير ذكي' : 'Estimation' }}</span>
+            <span class="auth-chip">{{ app()->getLocale() === 'ar' ? 'مستخدم عادي' : 'Regular user' }}</span>
+            <span class="auth-chip">{{ app()->getLocale() === 'ar' ? 'خدمات وطلبات' : 'Services & requests' }}</span>
+            <span class="auth-chip">{{ app()->getLocale() === 'ar' ? 'تقديم أعمال لاحقًا' : 'Business request later' }}</span>
         </div>
 
         <div class="auth-divider">
             <div class="auth-footer">
                 {{ app()->getLocale() === 'ar' ? 'لديك حساب بالفعل؟' : 'Already have an account?' }}
                 <a href="{{ route('login') }}">
-                    {{ app()->getLocale() === 'ar' ? 'تسجيل الدخول' : 'Sign in' }}
+                    {{ app()->getLocale() === 'ar' ? 'دخول المستخدم' : 'User login' }}
                 </a>
             </div>
         </div>

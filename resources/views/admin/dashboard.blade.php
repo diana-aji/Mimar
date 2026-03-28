@@ -35,7 +35,7 @@
             [
                 'title' => $isArabic ? 'إدارة الخدمات' : 'Manage Services',
                 'text' => $isArabic ? 'استعراض الخدمات وإدارتها ومتابعة حالتها.' : 'Browse, review, and manage listed services.',
-               'link' => route('admin.services.index'),
+                'link' => route('admin.services.index'),
                 'button' => $isArabic ? 'فتح الخدمات' : 'Open Services',
             ],
             [
@@ -45,10 +45,16 @@
                 'button' => $isArabic ? 'عرض الحسابات' : 'View Accounts',
             ],
             [
-                'title' => $isArabic ? 'التقدير الذكي' : 'Smart Estimation',
-                'text' => $isArabic ? 'الوصول السريع إلى موديول التقدير وربط النتائج.' : 'Quick access to the smart estimation workflow.',
-                'link' => route('estimations.create'),
-                'button' => $isArabic ? 'فتح التقدير' : 'Open Estimation',
+                'title' => $isArabic ? 'إدارة المستخدمين' : 'Manage Users',
+                'text' => $isArabic ? 'إضافة وتعديل وحذف المستخدمين والمدراء.' : 'Create, update, and manage users and admins.',
+                'link' => route('admin.users.index'),
+                'button' => $isArabic ? 'فتح المستخدمين' : 'Open Users',
+            ],
+            [
+                'title' => $isArabic ? 'إدارة الأدوار' : 'Manage Roles',
+                'text' => $isArabic ? 'عرض الأدوار، تعديلها، حذفها، وتحديد الصلاحيات الخاصة بها.' : 'View, edit, delete roles, and assign permissions.',
+                'link' => route('admin.roles.index'),
+                'button' => $isArabic ? 'فتح الأدوار' : 'Open Roles',
             ],
         ];
 
@@ -380,8 +386,8 @@
 
                     <p class="dashboard-copy">
                         {{ $isArabic
-                            ? 'من هذه اللوحة يمكنك متابعة الخدمات، حسابات الأعمال، الطلبات، وموديول التقدير الذكي ضمن تجربة إدارة مرتبة وواضحة.'
-                            : 'From this dashboard you can monitor services, business accounts, orders, and the smart estimation module in one organized management experience.' }}
+                            ? 'من هذه اللوحة يمكنك متابعة الخدمات، حسابات الأعمال، الطلبات، المستخدمين، والأدوار ضمن تجربة إدارة مرتبة وواضحة.'
+                            : 'From this dashboard you can monitor services, business accounts, orders, users, and roles in one organized management experience.' }}
                     </p>
                 </div>
 
@@ -389,8 +395,8 @@
                     <h3>{{ $isArabic ? 'وصول سريع' : 'Quick Access' }}</h3>
                     <div class="dashboard-hero-list">
                         <div>{{ $isArabic ? '• متابعة حالة الخدمات والطلبات' : '• Monitor services and orders status' }}</div>
-                        <div>{{ $isArabic ? '• إدارة الحسابات التجارية' : '• Manage business accounts' }}</div>
-                        <div>{{ $isArabic ? '• فتح التقدير الذكي مباشرة' : '• Open smart estimation directly' }}</div>
+                        <div>{{ $isArabic ? '• إدارة الحسابات التجارية والمستخدمين' : '• Manage business accounts and users' }}</div>
+                        <div>{{ $isArabic ? '• إدارة الأدوار والصلاحيات' : '• Manage roles and permissions' }}</div>
                     </div>
                 </div>
             </div>

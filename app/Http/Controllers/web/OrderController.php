@@ -28,7 +28,7 @@ class OrderController extends Controller
         $tab = $request->get('tab');
 
         if (! in_array($tab, ['sent', 'received'])) {
-            $tab = $receivedOrders->isNotEmpty() ? 'received' : 'sent';
+            $tab = $sentOrders->isNotEmpty() ? 'sent' : 'received';
         }
 
         return view('public.orders.index', [
@@ -47,13 +47,16 @@ class OrderController extends Controller
     public function store(Request $request, Service $service): RedirectResponse
     {
         $validated = $request->validate([
-            'sender_business_account_id' => ['required', 'exists:business_accounts,id'],
-            'quantity' => ['required', 'integer', 'min:1'],
+            'quantity' => ['nullable', 'integer', 'min:1'],
             'details' => ['nullable', 'string'],
             'needed_at' => ['nullable', 'date'],
         ]);
 
-        $this->service->create($request->user(), $service, $validated);
+        $this->service->create($request->user(), $service, [
+            'quantity' => $validated['quantity'] ?? 1,
+            'details' => $validated['details'] ?? null,
+            'needed_at' => $validated['needed_at'] ?? null,
+        ]);
 
         return redirect()
             ->route('orders.index', ['tab' => 'sent'])

@@ -2,18 +2,21 @@
 
 namespace App\Http\Requests\Web\BusinessAccount;
 
+use App\Models\BusinessAccount;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateBusinessAccountWebRequest extends FormRequest
 {
-   public function authorize(): bool
-{
-    $businessAccount = $this->route('businessAccount');
+    public function authorize(): bool
+    {
+        /** @var BusinessAccount|null $businessAccount */
+        $businessAccount = $this->route('businessAccount');
 
-    return $this->user() !== null
-        && $businessAccount
-        && (int) $businessAccount->user_id === (int) $this->user()->id;
-}
+        return $this->user() !== null
+            && $businessAccount !== null
+            && (int) $businessAccount->user_id === (int) $this->user()->id;
+    }
+
     public function rules(): array
     {
         return [
@@ -24,8 +27,8 @@ class UpdateBusinessAccountWebRequest extends FormRequest
             'name_en' => ['nullable', 'string', 'max:255'],
             'activities' => ['required', 'string'],
             'details' => ['required', 'string'],
-            'latitude' => ['nullable', 'numeric'],
-            'longitude' => ['nullable', 'numeric'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
 
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],

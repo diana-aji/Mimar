@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             EstimationTypeSeeder::class,
             MaterialTypeSeeder::class,
             CityMaterialPriceSeeder::class,
+            
         ]);
         User::factory()->create([
             'name' => 'Test User',

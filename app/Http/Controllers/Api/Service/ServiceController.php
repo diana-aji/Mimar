@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Service;
 use App\Models\Service;
 use App\Models\BusinessAccount;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use App\Services\Service\ServiceService;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\Service\StoreServiceRequest;
@@ -18,9 +19,9 @@ class ServiceController extends ApiController
     ) {
     }
 
-    public function index(BusinessAccount $businessAccount): JsonResponse
+    public function index(Request $request, BusinessAccount $businessAccount): JsonResponse
     {
-        $services = $this->service->listForUser($businessAccount);
+        $services = $this->service->listForUser($request->user(), $businessAccount);
 
         return $this->successResponse(
             ServiceResource::collection($services),
@@ -28,9 +29,15 @@ class ServiceController extends ApiController
         );
     }
 
-    public function store(StoreServiceRequest $request, BusinessAccount $businessAccount): JsonResponse
-    {
-        $service = $this->service->create($businessAccount, $request->validated());
+    public function store(
+        StoreServiceRequest $request,
+        BusinessAccount $businessAccount
+    ): JsonResponse {
+        $service = $this->service->create(
+            $request->user(),
+            $businessAccount,
+            $request->validated()
+        );
 
         return $this->successResponse(
             new ServiceResource($service),
@@ -41,7 +48,11 @@ class ServiceController extends ApiController
 
     public function update(UpdateServiceRequest $request, Service $service): JsonResponse
     {
-        $service = $this->service->update($service, $request->validated());
+        $service = $this->service->update(
+            $request->user(),
+            $service,
+            $request->validated()
+        );
 
         return $this->successResponse(
             new ServiceResource($service),
@@ -49,9 +60,9 @@ class ServiceController extends ApiController
         );
     }
 
-    public function destroy(Service $service): JsonResponse
+    public function destroy(Request $request, Service $service): JsonResponse
     {
-        $this->service->delete($service);
+        $this->service->delete($request->user(), $service);
 
         return $this->successResponse(
             null,

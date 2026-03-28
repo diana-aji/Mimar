@@ -119,14 +119,16 @@
         }
 
         .ba-card,
-        .ba-form-card {
+        .ba-form-card,
+        .ba-empty-card {
             background: rgba(255,255,255,0.96);
             border: 1px solid rgba(15,23,42,0.06);
             border-radius: 28px;
             box-shadow: 0 12px 30px rgba(15,23,42,0.05);
         }
 
-        .ba-card {
+        .ba-card,
+        .ba-empty-card {
             padding: 24px;
         }
 
@@ -242,6 +244,20 @@
             color: #64748b;
             font-size: 14px;
             line-height: 1.85;
+        }
+
+        .ba-reject-box {
+            padding: 16px 18px;
+            border-radius: 20px;
+            background: rgba(239,68,68,0.06);
+            border: 1px solid rgba(239,68,68,0.10);
+            color: #991b1b;
+        }
+
+        .ba-reject-box strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 15px;
         }
 
         .ba-gallery-wrap {
@@ -442,6 +458,37 @@
             border: 1px solid rgba(15,23,42,0.08);
         }
 
+        .ba-empty-card {
+            display: grid;
+            gap: 18px;
+        }
+
+        .ba-empty-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 14px;
+        }
+
+        .ba-empty-box {
+            padding: 18px;
+            border-radius: 20px;
+            background: #f8fafc;
+            border: 1px solid rgba(15,23,42,0.06);
+        }
+
+        .ba-empty-box strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: #24304d;
+        }
+
+        .ba-empty-box span {
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.9;
+        }
+
         @media (max-width: 1100px) {
             .ba-hero-grid,
             .ba-main-grid {
@@ -456,7 +503,8 @@
 
             .ba-meta-grid,
             .ba-form-grid,
-            .ba-gallery {
+            .ba-gallery,
+            .ba-empty-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -472,41 +520,74 @@
                 <div>
                     <h1>
                         {{ $isArabic
-                            ? 'إدارة حسابات أعمالك والخدمات والطلبات داخل Mi\'mar'
-                            : 'Managing your services and requests inside Mi\'mar' }}
+                            ? 'قدّم طلب حساب أعمال وابدأ رحلتك المهنية داخل Mi\'mar'
+                            : 'Apply for a business account and start your professional journey inside Mi\'mar' }}
                     </h1>
                     <p>
                         {{ $isArabic
-                            ? 'من خلال حساب الأعمال يمكنك نشر الخدمات، استقبال الطلبات، وإدارة التواصل مع العملاء ضمن تجربة عمل احترافية ومرتبة.'
-                            : 'With a business account you can publish services, receive requests, and manage client communication through one professional workflow.' }}
+                            ? 'الحساب العادي هو نقطة البداية. وعند رغبتك بنشر الخدمات واستقبال الطلبات بشكل احترافي، يمكنك إرسال طلب حساب أعمال من هذه الصفحة.'
+                            : 'A regular user account is your starting point. When you are ready to publish services and receive requests professionally, you can submit a business account request from this page.' }}
                     </p>
                 </div>
 
                 <div class="ba-hero-side">
-                    <h3>{{ $isArabic ? 'ماذا يفتح لك؟' : 'What does it unlock?' }}</h3>
+                    <h3>{{ $isArabic ? 'ماذا يفتح لك حساب الأعمال؟' : 'What does a business account unlock?' }}</h3>
                     <ul>
-                        <li>{{ $isArabic ? 'نشر الخدمات' : 'Publish services' }}</li>
-                        <li>{{ $isArabic ? 'استقبال الطلبات' : 'Receive requests' }}</li>
-                        <li>{{ $isArabic ? 'إدارة المحادثات' : 'Manage conversations' }}</li>
+                        <li>{{ $isArabic ? 'نشر الخدمات داخل المنصة' : 'Publish services on the platform' }}</li>
+                        <li>{{ $isArabic ? 'استقبال الطلبات من العملاء' : 'Receive customer requests' }}</li>
+                        <li>{{ $isArabic ? 'بناء حضور مهني موثوق' : 'Build a trusted professional presence' }}</li>
                     </ul>
                 </div>
             </div>
         </section>
 
-        <section class="ba-card">
-            <div class="ba-head">
-                <h2 class="ba-title">{{ $isArabic ? 'حسابات الأعمال' : 'Business accounts' }}</h2>
+        @if (! $latestBusinessAccount)
+            <section class="ba-empty-card">
+                <div class="ba-head" style="margin-bottom: 0;">
+                    <h2 class="ba-title">{{ $isArabic ? 'لا يوجد طلب حساب أعمال حتى الآن' : 'No business account request yet' }}</h2>
 
-                <a href="{{ route('business-account.index', ['new' => 1]) }}" class="ba-btn">
-                    {{ $isArabic ? 'إضافة حساب أعمال جديد' : 'Add new business account' }}
-                </a>
-            </div>
+                    <a href="{{ route('business-account.index', ['new' => 1]) }}" class="ba-btn">
+                        {{ $isArabic ? 'قدّم طلب حساب أعمال' : 'Submit business account request' }}
+                    </a>
+                </div>
 
-            @if ($latestBusinessAccount)
+                <p class="ba-sub" style="margin:0;">
+                    {{ $isArabic
+                        ? 'أنت الآن تستخدم المنصة كمستخدم عادي. إذا أردت إضافة خدماتك واستقبال الطلبات، أرسل طلب حساب أعمال وسيتم مراجعته من قبل الإدارة.'
+                        : 'You are currently using the platform as a regular user. If you want to add your services and receive requests, submit a business account request and it will be reviewed by the admin team.' }}
+                </p>
+
+                <div class="ba-empty-grid">
+                    <div class="ba-empty-box">
+                        <strong>{{ $isArabic ? 'الخطوة 1' : 'Step 1' }}</strong>
+                        <span>{{ $isArabic ? 'أدخل بيانات نشاطك التجاري الأساسية.' : 'Enter your core business information.' }}</span>
+                    </div>
+
+                    <div class="ba-empty-box">
+                        <strong>{{ $isArabic ? 'الخطوة 2' : 'Step 2' }}</strong>
+                        <span>{{ $isArabic ? 'أرفق الصور والوثائق الداعمة.' : 'Attach supporting images and documents.' }}</span>
+                    </div>
+
+                    <div class="ba-empty-box">
+                        <strong>{{ $isArabic ? 'الخطوة 3' : 'Step 3' }}</strong>
+                        <span>{{ $isArabic ? 'انتظر مراجعة الإدارة ثم ابدأ بإضافة خدماتك.' : 'Wait for admin review, then start publishing your services.' }}</span>
+                    </div>
+                </div>
+            </section>
+        @else
+            <section class="ba-card">
+                <div class="ba-head">
+                    <h2 class="ba-title">{{ $isArabic ? 'آخر طلب حساب أعمال' : 'Latest business account request' }}</h2>
+
+                    <a href="{{ route('business-account.index', ['new' => 1]) }}" class="ba-btn">
+                        {{ $isArabic ? 'إضافة طلب جديد' : 'Create new request' }}
+                    </a>
+                </div>
+
                 <p class="ba-sub">
                     {{ $isArabic
-                        ? 'هذا آخر حساب أعمال قمت بإرساله أو تحديثه.'
-                        : 'This is the most recent business account you submitted or updated.' }}
+                        ? 'هذا هو أحدث طلب حساب أعمال قمت بإرساله أو تحديثه داخل المنصة.'
+                        : 'This is the most recent business account request you submitted or updated on the platform.' }}
                 </p>
 
                 <div class="ba-main-grid">
@@ -546,14 +627,31 @@
                                 <strong>{{ $latestBusinessAccount->details ?? '—' }}</strong>
                             </div>
                         </div>
+
+                        @if ($latestBusinessAccount->status === 'rejected' && $latestBusinessAccount->rejection_reason)
+                            <div class="ba-reject-box">
+                                <strong>{{ $isArabic ? 'سبب الرفض' : 'Rejection reason' }}</strong>
+                                <div>{{ $latestBusinessAccount->rejection_reason }}</div>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="ba-side-note">
-                        <h3>{{ $isArabic ? 'ماذا يحدث لاحقًا؟' : 'What happens next?' }}</h3>
+                        <h3>{{ $isArabic ? 'ما الذي يحدث الآن؟' : 'What happens now?' }}</h3>
                         <ul>
-                            <li>{{ $isArabic ? 'ستتم مراجعة المعلومات من قبل فريق الإدارة.' : 'Your information is being reviewed by the admin team.' }}</li>
-                            <li>{{ $isArabic ? 'بعد القبول ستتمكن من إدارة خدماتك بشكل كامل.' : 'After approval, you will be able to manage your services fully.' }}</li>
-                            <li>{{ $isArabic ? 'ستصلك إشعارات عند تغير حالة الحساب.' : 'You will receive a notification when the account status changes.' }}</li>
+                            @if ($latestBusinessAccount->status === 'approved')
+                                <li>{{ $isArabic ? 'تم قبول الطلب ويمكنك الآن استخدام حساب الأعمال بشكل كامل.' : 'Your request has been approved and you can now fully use your business account.' }}</li>
+                                <li>{{ $isArabic ? 'أصبح بإمكانك إضافة الخدمات واستقبال الطلبات.' : 'You can now publish services and receive requests.' }}</li>
+                                <li>{{ $isArabic ? 'يمكنك تحديث بيانات الحساب عند الحاجة.' : 'You may update account information when needed.' }}</li>
+                            @elseif ($latestBusinessAccount->status === 'rejected')
+                                <li>{{ $isArabic ? 'تم رفض الطلب الحالي ويمكنك تعديل البيانات وإعادة التقديم.' : 'Your current request was rejected and you can review the details and submit again.' }}</li>
+                                <li>{{ $isArabic ? 'احرص على إرفاق معلومات ووثائق أوضح عند الإعادة.' : 'Make sure to provide clearer information and supporting documents on resubmission.' }}</li>
+                                <li>{{ $isArabic ? 'يمكنك إنشاء طلب جديد مباشرة من هذه الصفحة.' : 'You can create a new request directly from this page.' }}</li>
+                            @else
+                                <li>{{ $isArabic ? 'طلبك قيد المراجعة من قبل الإدارة.' : 'Your request is currently under admin review.' }}</li>
+                                <li>{{ $isArabic ? 'سيتم إشعارك عند تحديث الحالة.' : 'You will be notified when the status changes.' }}</li>
+                                <li>{{ $isArabic ? 'بعد القبول ستتمكن من إدارة خدماتك بشكل كامل.' : 'Once approved, you will be able to manage your services fully.' }}</li>
+                            @endif
                         </ul>
                     </div>
                 </div>
@@ -594,7 +692,7 @@
 
                 @if ($businessAccounts->count() > 1)
                     <div class="ba-gallery-wrap">
-                        <h3 class="ba-section-title">{{ $isArabic ? 'حسابات أخرى' : 'Other accounts' }}</h3>
+                        <h3 class="ba-section-title">{{ $isArabic ? 'طلبات أخرى' : 'Other requests' }}</h3>
 
                         <div class="ba-list">
                             @foreach ($businessAccounts->skip(1) as $account)
@@ -612,16 +710,21 @@
                         </div>
                     </div>
                 @endif
-            @endif
-        </section>
+            </section>
+        @endif
 
         @if ($showForm)
             <section class="ba-form-card">
-                <h2 class="ba-title">{{ $isArabic ? 'إضافة حساب أعمال جديد' : 'Create a new business account' }}</h2>
+                <h2 class="ba-title">
+                    {{ $latestBusinessAccount
+                        ? ($isArabic ? 'إرسال طلب حساب أعمال جديد' : 'Submit a new business account request')
+                        : ($isArabic ? 'إرسال طلب حساب أعمال' : 'Submit a business account request') }}
+                </h2>
+
                 <p class="ba-sub">
                     {{ $isArabic
-                        ? 'املأ المعلومات الأساسية وأرفق الصور/الوثائق لإرسال حساب الأعمال للمراجعة.'
-                        : 'Fill in the core information and attach images/documents to submit your business account for review.' }}
+                        ? 'املأ المعلومات الأساسية وأرفق الصور والوثائق المطلوبة لإرسال طلبك إلى الإدارة للمراجعة.'
+                        : 'Fill in the core information and attach the required images and documents to submit your request for admin review.' }}
                 </p>
 
                 @if ($errors->any())
@@ -729,7 +832,7 @@
 
                     <div class="ba-form-actions">
                         <button type="submit" class="ba-btn">
-                            {{ $isArabic ? 'إرسال الحساب' : 'Submit account' }}
+                            {{ $isArabic ? 'إرسال الطلب' : 'Submit request' }}
                         </button>
 
                         <a href="{{ route('business-account.index') }}" class="ba-secondary-btn">

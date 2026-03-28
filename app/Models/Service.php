@@ -21,6 +21,7 @@ class Service extends Model
         'description',
         'price',
         'status',
+        'rejection_reason',
         'approved_by',
         'approved_at',
         'rejected_by',

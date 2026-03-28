@@ -16,9 +16,9 @@ class RegisterWebRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['required', 'string', 'max:30', 'unique:users,phone'],
             'password' => ['required', 'confirmed', Password::min(8)],
-            'account_type' => ['required', 'in:user,business'], 
         ];
     }
 
@@ -27,9 +27,9 @@ class RegisterWebRequest extends FormRequest
         return [
             'name' => __('messages.attributes.name'),
             'email' => __('messages.attributes.email'),
+            'phone' => __('messages.attributes.phone'),
             'password' => __('messages.attributes.password'),
             'password_confirmation' => __('messages.attributes.password_confirmation'),
-            'account_type' => __('messages.attributes.account_type'),
         ];
     }
 }

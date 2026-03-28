@@ -10,21 +10,33 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::query()->firstOrCreate(
-            [
-                'email' => 'admin@realestate.com',
-            ],
-            [
+        $admin = User::query()
+            ->where('email', 'admin@realestate.com')
+            ->orWhere('phone', '09999999999')
+            ->first();
+
+        if (! $admin) {
+            $admin = User::query()->create([
                 'name' => 'Super Admin',
+                'email' => 'admin@realestate.com',
                 'phone' => '09999999999',
-                'password' => '12345678',
+                'password' => bcrypt('12345678'),
                 'locale' => 'ar',
                 'is_active' => true,
-            ]
-        );
-
-        if (! $admin->hasRole(SystemRole::SUPER_ADMIN->value)) {
-            $admin->assignRole(SystemRole::SUPER_ADMIN->value);
+                'account_type' => 'admin',
+            ]);
+        } else {
+            $admin->update([
+                'name' => 'Super Admin',
+                'email' => 'admin@realestate.com',
+                'phone' => '09999999999',
+                'password' => bcrypt('12345678'),
+                'locale' => 'ar',
+                'is_active' => true,
+                'account_type' => 'admin',
+            ]);
         }
+
+        $admin->syncRoles([SystemRole::SUPER_ADMIN->value]);
     }
 }

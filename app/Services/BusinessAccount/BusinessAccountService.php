@@ -113,11 +113,12 @@ class BusinessAccountService
             'rejected_at' => null,
         ]);
 
-         return $businessAccount->refresh()->load(['city', 'activityType', 'images', 'documents']);
-         $businessAccount->user?->notify(
-    new BusinessAccountStatusChangedNotification($businessAccount));
-         }
+        $businessAccount->user?->notify(
+            new BusinessAccountStatusChangedNotification($businessAccount)
+        );
 
+        return $businessAccount->refresh()->load(['city', 'activityType', 'images', 'documents']);
+    }
 
     public function reject(User $admin, BusinessAccount $businessAccount, string $reason): BusinessAccount
     {
@@ -130,14 +131,16 @@ class BusinessAccountService
             'rejected_at' => now(),
         ]);
 
+        $businessAccount->user?->notify(
+            new BusinessAccountStatusChangedNotification($businessAccount)
+        );
+
         return $businessAccount->refresh()->load(['city', 'activityType', 'images', 'documents']);
-    $businessAccount->user?->notify(
-    new BusinessAccountStatusChangedNotification($businessAccount));
-        }
+    }
 
     protected function ensureOwnership(User $user, BusinessAccount $businessAccount): void
     {
-        if ($businessAccount->user_id !== $user->id) {
+        if ((int) $businessAccount->user_id !== (int) $user->id) {
             throw new DomainException(__('messages.forbidden'));
         }
     }

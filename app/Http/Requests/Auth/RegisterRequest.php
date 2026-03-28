@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Password;
 
 class RegisterRequest extends FormRequest
 {
@@ -17,23 +18,20 @@ class RegisterRequest extends FormRequest
             'name' => ['required', 'string', 'min:3', 'max:255'],
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'confirmed', Password::min(8)],
             'locale' => ['nullable', 'in:ar,en'],
         ];
     }
 
-    public function messages(): array
+    public function attributes(): array
     {
         return [
-            'name.required' => __('validation.required', ['attribute' => 'name']),
-            'phone.required' => __('validation.required', ['attribute' => 'phone']),
-            'phone.unique' => __('validation.unique', ['attribute' => 'phone']),
-            'email.email' => __('validation.email', ['attribute' => 'email']),
-            'email.unique' => __('validation.unique', ['attribute' => 'email']),
-            'password.required' => __('validation.required', ['attribute' => 'password']),
-            'password.min' => __('validation.min.string', ['attribute' => 'password', 'min' => 8]),
-            'password.confirmed' => __('validation.confirmed', ['attribute' => 'password']),
-            'locale.in' => __('validation.in', ['attribute' => 'locale']),
+            'name' => __('messages.attributes.name'),
+            'email' => __('messages.attributes.email'),
+            'phone' => __('messages.attributes.phone'),
+            'password' => __('messages.attributes.password'),
+            'password_confirmation' => __('messages.attributes.password_confirmation'),
+            'locale' => __('messages.attributes.locale'),
         ];
     }
 }

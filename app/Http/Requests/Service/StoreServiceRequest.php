@@ -8,7 +8,7 @@ class StoreServiceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user() !== null;
     }
 
     public function rules(): array
@@ -20,6 +20,18 @@ class StoreServiceRequest extends FormRequest
             'name_en' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'category_id' => __('messages.attributes.category'),
+            'subcategory_id' => __('messages.attributes.subcategory'),
+            'name_ar' => __('messages.attributes.name_ar'),
+            'name_en' => __('messages.attributes.name_en'),
+            'description' => __('messages.attributes.description'),
+            'price' => __('messages.attributes.price'),
         ];
     }
 }

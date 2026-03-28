@@ -4,6 +4,8 @@
 @php
     $isArabic = app()->getLocale() === 'ar';
     $featuredServices = $featuredServices ?? collect();
+    $sliders = $sliders ?? collect();
+    $businessAccount = $businessAccount ?? null;
 
     $recentRequests = [
         [
@@ -90,30 +92,78 @@
         'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80',
         'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
     ];
+
+    $businessStatusLabel = function ($status) use ($isArabic) {
+        return match ($status) {
+            'approved' => $isArabic ? 'حساب الأعمال مفعل' : 'Business account active',
+            'rejected' => $isArabic ? 'تم رفض الطلب' : 'Request rejected',
+            default => $isArabic ? 'قيد المراجعة' : 'Under review',
+        };
+    };
+
+    $businessStatusText = function ($status) use ($isArabic) {
+        return match ($status) {
+            'approved' => $isArabic
+                ? 'يمكنك الآن إدارة خدماتك واستقبال الطلبات من خلال حساب الأعمال.'
+                : 'You can now manage services and receive requests through your business account.',
+            'rejected' => $isArabic
+                ? 'تم رفض طلب حساب الأعمال السابق. يمكنك مراجعة البيانات وإرسال طلب جديد.'
+                : 'Your previous business account request was rejected. You can review the details and submit a new request.',
+            default => $isArabic
+                ? 'طلب حساب الأعمال الخاص بك قيد المراجعة من قبل الإدارة.'
+                : 'Your business account request is currently being reviewed by the admin team.',
+        };
+    };
+
+    $businessStatusClass = function ($status) {
+        return match ($status) {
+            'approved' => 'business-status-approved',
+            'rejected' => 'business-status-rejected',
+            default => 'business-status-pending',
+        };
+    };
 @endphp
 
 <style>
-    .dashboard-v2 {
-        display: grid;
-        gap: 24px;
-    }
+    .dashboard-v2 { display:grid; gap:24px; }
 
-    .hero-v2 {
+    .hero-slider-v2 {
         position: relative;
         overflow: hidden;
         border-radius: 34px;
-        min-height: 380px;
-        background:
-            linear-gradient(135deg, rgba(10,16,30,.90) 0%, rgba(21,35,67,.80) 45%, rgba(39,57,101,.70) 100%),
-            url('https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+        min-height: 420px;
         box-shadow: 0 28px 70px rgba(15,23,42,0.18);
-        color: white;
+    }
+
+    .hero-slide-v2 {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .7s ease, visibility .7s ease;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
         display: flex;
         align-items: end;
         isolation: isolate;
     }
 
-    .hero-v2::before {
+    .hero-slide-v2.active {
+        opacity: 1;
+        visibility: visible;
+        z-index: 1;
+    }
+
+    .hero-slide-v2::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(135deg, rgba(10,16,30,.90) 0%, rgba(21,35,67,.80) 45%, rgba(39,57,101,.70) 100%);
+    }
+
+    .hero-slide-v2::after {
         content: "";
         position: absolute;
         inset: 0;
@@ -125,27 +175,16 @@
         pointer-events: none;
     }
 
-    .hero-v2::after {
-        content: "";
-        position: absolute;
-        width: 320px;
-        height: 320px;
-        border-radius: 50%;
-        top: -110px;
-        inset-inline-end: -80px;
-        background: radial-gradient(circle, rgba(255,255,255,0.16), transparent 66%);
-        z-index: 0;
-    }
-
-    .hero-v2-inner {
+    .hero-slide-inner-v2 {
         position: relative;
-        z-index: 1;
+        z-index: 2;
         width: 100%;
         padding: 34px;
         display: grid;
         grid-template-columns: 1.15fr 0.85fr;
         gap: 22px;
         align-items: end;
+        color: white;
     }
 
     .hero-v2-badge {
@@ -215,10 +254,6 @@
         box-shadow: 0 16px 28px rgba(255,255,255,0.12);
     }
 
-    .hero-v2-btn-primary:hover {
-        transform: translateY(-1px);
-    }
-
     .hero-v2-btn-secondary {
         background: rgba(255,255,255,0.10);
         border: 1px solid rgba(255,255,255,0.16);
@@ -260,6 +295,29 @@
         line-height: 1;
         color: #d4a95f;
         margin-top: -1px;
+    }
+
+    .hero-dots-v2 {
+        position: absolute;
+        z-index: 5;
+        bottom: 20px;
+        inset-inline-start: 34px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .hero-dot-v2 {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        background: rgba(255,255,255,0.35);
+    }
+
+    .hero-dot-v2.active {
+        background: white;
+        transform: scale(1.08);
     }
 
     .quick-shortcuts-v2 {
@@ -311,6 +369,96 @@
         line-height: 1.8;
     }
 
+    .business-cta-card {
+        background: rgba(255,255,255,0.98);
+        border: 1px solid rgba(15,23,42,0.06);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.05);
+        display: grid;
+        grid-template-columns: 1.1fr .9fr;
+        gap: 18px;
+        align-items: center;
+    }
+
+    .business-cta-title {
+        margin: 0 0 10px;
+        font-size: 28px;
+        font-weight: 800;
+        color: #24304d;
+        line-height: 1.1;
+    }
+
+    .business-cta-text {
+        margin: 0;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.95;
+    }
+
+    .business-cta-actions {
+        margin-top: 16px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .business-cta-btn,
+    .business-cta-btn-secondary {
+        height: 44px;
+        padding: 0 16px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    .business-cta-btn {
+        background: linear-gradient(135deg, #4458db 0%, #243873 100%);
+        color: white;
+    }
+
+    .business-cta-btn-secondary {
+        background: #f8fafc;
+        color: #334155;
+        border: 1px solid rgba(15,23,42,0.08);
+    }
+
+    .business-status-box {
+        padding: 18px;
+        border-radius: 24px;
+        border: 1px solid rgba(15,23,42,0.06);
+    }
+
+    .business-status-box h3 {
+        margin: 0 0 10px;
+        font-size: 18px;
+        font-weight: 800;
+        color: #24304d;
+    }
+
+    .business-status-box p {
+        margin: 0;
+        color: #475569;
+        font-size: 14px;
+        line-height: 1.9;
+    }
+
+    .business-status-approved {
+        background: rgba(5,150,105,0.08);
+    }
+
+    .business-status-pending {
+        background: rgba(245,158,11,0.10);
+    }
+
+    .business-status-rejected {
+        background: rgba(239,68,68,0.08);
+    }
+
     .stats-v2 {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -324,11 +472,6 @@
         padding: 22px;
         box-shadow: 0 12px 30px rgba(15,23,42,0.05);
         transition: .2s ease;
-    }
-
-    .stat-v2:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 18px 36px rgba(15,23,42,0.08);
     }
 
     .stat-v2-label {
@@ -369,9 +512,7 @@
         box-shadow: 0 12px 30px rgba(15,23,42,0.05);
     }
 
-    .panel-v2 {
-        padding: 24px;
-    }
+    .panel-v2 { padding: 24px; }
 
     .panel-v2-header {
         display: flex;
@@ -408,11 +549,6 @@
         transition: .2s ease;
     }
 
-    .feature-card-v2:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 20px 40px rgba(15,23,42,0.08);
-    }
-
     .feature-card-v2 img {
         width: 100%;
         height: 220px;
@@ -420,9 +556,7 @@
         display: block;
     }
 
-    .feature-card-v2-body {
-        padding: 18px;
-    }
+    .feature-card-v2-body { padding: 18px; }
 
     .feature-card-v2-badge {
         display: inline-flex;
@@ -500,17 +634,13 @@
         text-decoration: none;
         font-size: 13px;
         font-weight: 700;
-        transition: .2s ease;
     }
 
     .btn-v2-primary {
         background: linear-gradient(135deg, #4458db 0%, #243873 100%);
         color: white;
-        box-shadow: 0 14px 26px rgba(36,56,115,0.16);
-    }
-
-    .btn-v2-primary:hover {
-        transform: translateY(-1px);
+        border: none;
+        cursor: pointer;
     }
 
     .btn-v2-secondary {
@@ -562,7 +692,6 @@
         text-decoration: none;
         font-size: 13px;
         font-weight: 800;
-        transition: .2s ease;
     }
 
     .cta-v2-actions .light {
@@ -588,11 +717,6 @@
         border-radius: 20px;
         background: #f8fafc;
         border: 1px solid rgba(15,23,42,0.06);
-        transition: .2s ease;
-    }
-
-    .list-v2-item:hover {
-        background: #fbfdff;
     }
 
     .list-v2-head {
@@ -661,8 +785,9 @@
     }
 
     @media (max-width: 1100px) {
-        .hero-v2-inner,
-        .dashboard-v2-grid {
+        .hero-slide-inner-v2,
+        .dashboard-v2-grid,
+        .business-cta-card {
             grid-template-columns: 1fr;
         }
 
@@ -672,14 +797,15 @@
     }
 
     @media (max-width: 767px) {
-        .hero-v2 {
-            min-height: auto;
+        .hero-slider-v2 {
+            min-height: 460px;
             border-radius: 26px;
         }
 
-        .hero-v2-inner,
+        .hero-slide-inner-v2,
         .panel-v2,
-        .cta-v2 {
+        .cta-v2,
+        .business-cta-card {
             padding: 20px;
         }
 
@@ -693,44 +819,92 @@
             grid-template-columns: 1fr;
         }
 
-        .panel-v2-title {
+        .panel-v2-title,
+        .business-cta-title {
             font-size: 22px;
+        }
+
+        .hero-dots-v2 {
+            inset-inline-start: 20px;
         }
     }
 </style>
 
 <div class="dashboard-v2">
-    <section class="hero-v2">
-        <div class="hero-v2-inner">
-            <div>
-                <span class="hero-v2-badge">{{ __('ui.workspace_overview') }}</span>
+    @if ($sliders->count())
+        <section class="hero-slider-v2" id="heroSlider">
+            @foreach ($sliders as $index => $slider)
+                @php
+                    $slideImage = \Illuminate\Support\Str::startsWith($slider->image, ['http://', 'https://'])
+                        ? $slider->image
+                        : asset('storage/' . ltrim($slider->image, '/'));
 
-                <h1 class="hero-v2-title">{{ __('ui.dashboard_hero_title') }}</h1>
+                    $slideTitle = $isArabic ? ($slider->title_ar ?? '') : ($slider->title_en ?? '');
+                    $slideSubtitle = $isArabic ? ($slider->subtitle_ar ?? '') : ($slider->subtitle_en ?? '');
+                    $slideButtonText = $isArabic
+                        ? ($slider->button_text_ar ?: __('ui.start_estimation'))
+                        : ($slider->button_text_en ?: __('ui.start_estimation'));
+                    $slideButtonUrl = $slider->button_url ?: route('estimations.create');
+                @endphp
 
-                <p class="hero-v2-copy">{{ __('ui.dashboard_hero_copy') }}</p>
+                <div class="hero-slide-v2 {{ $index === 0 ? 'active' : '' }}" style="background-image: url('{{ $slideImage }}');">
+                    <div class="hero-slide-inner-v2">
+                        <div>
+                            <span class="hero-v2-badge">{{ __('ui.workspace_overview') }}</span>
+                            <h1 class="hero-v2-title">{{ $slideTitle }}</h1>
+                            <p class="hero-v2-copy">{{ $slideSubtitle }}</p>
 
-                <div class="hero-v2-actions">
-                    <a href="{{ route('estimations.create') }}" class="hero-v2-btn-primary">
-                        {{ __('ui.start_estimation') }}
-                    </a>
+                            <div class="hero-v2-actions">
+                                <a href="{{ $slideButtonUrl }}" class="hero-v2-btn-primary">{{ $slideButtonText }}</a>
+                                <a href="{{ route('services.index') }}" class="hero-v2-btn-secondary">{{ __('ui.explore_services') }}</a>
+                            </div>
+                        </div>
 
-                    <a href="{{ route('services.index') }}" class="hero-v2-btn-secondary">
-                        {{ __('ui.explore_services') }}
-                    </a>
+                        <div class="hero-v2-panel">
+                            <h3 class="hero-v2-panel-title">{{ __('ui.what_you_can_do_now') }}</h3>
+                            <div class="hero-v2-list">
+                                <div class="hero-v2-list-item">{{ __('ui.hero_action_1') }}</div>
+                                <div class="hero-v2-list-item">{{ __('ui.hero_action_2') }}</div>
+                                <div class="hero-v2-list-item">{{ __('ui.hero_action_3') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+
+            <div class="hero-dots-v2">
+                @foreach ($sliders as $index => $slider)
+                    <button class="hero-dot-v2 {{ $index === 0 ? 'active' : '' }}" type="button" data-slide="{{ $index }}"></button>
+                @endforeach
+            </div>
+        </section>
+    @else
+        <section class="hero-slider-v2">
+            <div class="hero-slide-v2 active" style="background-image: url('https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1600&q=80');">
+                <div class="hero-slide-inner-v2">
+                    <div>
+                        <span class="hero-v2-badge">{{ __('ui.workspace_overview') }}</span>
+                        <h1 class="hero-v2-title">{{ __('ui.dashboard_hero_title') }}</h1>
+                        <p class="hero-v2-copy">{{ __('ui.dashboard_hero_copy') }}</p>
+
+                        <div class="hero-v2-actions">
+                            <a href="{{ route('estimations.create') }}" class="hero-v2-btn-primary">{{ __('ui.start_estimation') }}</a>
+                            <a href="{{ route('services.index') }}" class="hero-v2-btn-secondary">{{ __('ui.explore_services') }}</a>
+                        </div>
+                    </div>
+
+                    <div class="hero-v2-panel">
+                        <h3 class="hero-v2-panel-title">{{ __('ui.what_you_can_do_now') }}</h3>
+                        <div class="hero-v2-list">
+                            <div class="hero-v2-list-item">{{ __('ui.hero_action_1') }}</div>
+                            <div class="hero-v2-list-item">{{ __('ui.hero_action_2') }}</div>
+                            <div class="hero-v2-list-item">{{ __('ui.hero_action_3') }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="hero-v2-panel">
-                <h3 class="hero-v2-panel-title">{{ __('ui.what_you_can_do_now') }}</h3>
-
-                <div class="hero-v2-list">
-                    <div class="hero-v2-list-item">{{ __('ui.hero_action_1') }}</div>
-                    <div class="hero-v2-list-item">{{ __('ui.hero_action_2') }}</div>
-                    <div class="hero-v2-list-item">{{ __('ui.hero_action_3') }}</div>
-                </div>
-            </div>
-        </div>
-    </section>
+        </section>
+    @endif
 
     <section class="quick-shortcuts-v2">
         <a href="{{ route('services.index') }}" class="shortcut-card-v2">
@@ -756,6 +930,58 @@
             <h3 class="shortcut-title-v2">{{ $isArabic ? 'المحادثات' : 'Chat' }}</h3>
             <p class="shortcut-text-v2">{{ $isArabic ? 'تواصل مع مزودي الخدمات ضمن مكان واحد.' : 'Communicate with service providers in one place.' }}</p>
         </a>
+    </section>
+
+    <section class="business-cta-card">
+        <div>
+            <h2 class="business-cta-title">
+                @if (! $businessAccount)
+                    {{ $isArabic ? 'ابدأ بطلب حساب أعمال' : 'Start your business account request' }}
+                @else
+                    {{ $businessStatusLabel($businessAccount->status) }}
+                @endif
+            </h2>
+
+            <p class="business-cta-text">
+                @if (! $businessAccount)
+                    {{ $isArabic
+                        ? 'حسابك الحالي هو حساب مستخدم عادي. إذا أردت نشر خدماتك واستقبال الطلبات داخل المنصة، قدّم طلب حساب أعمال من هنا.'
+                        : 'Your current account is a regular user account. If you want to publish your services and receive requests on the platform, submit a business account request from here.' }}
+                @else
+                    {{ $businessStatusText($businessAccount->status) }}
+                @endif
+            </p>
+
+            <div class="business-cta-actions">
+                <a href="{{ route('business-account.index') }}" class="business-cta-btn">
+                    {{ $isArabic ? 'فتح حساب الأعمال' : 'Open business account' }}
+                </a>
+
+                @if (! $businessAccount || $businessAccount->status === 'rejected')
+                    <a href="{{ route('business-account.index', ['new' => 1]) }}" class="business-cta-btn-secondary">
+                        {{ $isArabic ? 'إرسال طلب جديد' : 'Submit new request' }}
+                    </a>
+                @endif
+            </div>
+        </div>
+
+        <div class="business-status-box {{ $businessAccount ? $businessStatusClass($businessAccount->status) : 'business-status-pending' }}">
+            <h3>
+                {{ ! $businessAccount
+                    ? ($isArabic ? 'الحالة الحالية' : 'Current status')
+                    : $businessStatusLabel($businessAccount->status) }}
+            </h3>
+
+            <p>
+                @if (! $businessAccount)
+                    {{ $isArabic
+                        ? 'لا يوجد لديك طلب حساب أعمال حتى الآن. يمكنك البدء بإرسال البيانات والوثائق المطلوبة ليتم مراجعتها من الإدارة.'
+                        : 'You do not have a business account request yet. You can start by submitting the required details and documents for admin review.' }}
+                @else
+                    {{ $businessStatusText($businessAccount->status) }}
+                @endif
+            </p>
+        </div>
     </section>
 
     <section class="stats-v2">
@@ -830,9 +1056,12 @@
                                         {{ __('ui.details') }}
                                     </a>
 
-                                    <a href="{{ route('orders.index') }}" class="btn-v2-primary">
-                                        {{ __('ui.send_request') }}
-                                    </a>
+                                    <form method="POST" action="{{ route('orders.store', $service->id) }}" style="margin:0;">
+                                        @csrf
+                                        <button type="submit" class="btn-v2-primary">
+                                            {{ __('ui.send_request') }}
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </article>
@@ -851,13 +1080,8 @@
                 <p>{{ __('ui.smart_estimation_copy') }}</p>
 
                 <div class="cta-v2-actions">
-                    <a href="{{ route('estimations.create') }}" class="light">
-                        {{ __('ui.start_now') }}
-                    </a>
-
-                    <a href="{{ route('services.index') }}" class="ghost">
-                        {{ __('ui.browse_services') }}
-                    </a>
+                    <a href="{{ route('estimations.create') }}" class="light">{{ __('ui.start_now') }}</a>
+                    <a href="{{ route('services.index') }}" class="ghost">{{ __('ui.browse_services') }}</a>
                 </div>
             </div>
 
@@ -899,4 +1123,40 @@
     </section>
 </div>
 
+@if ($sliders->count() > 1)
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const slider = document.getElementById('heroSlider');
+        if (!slider) return;
+
+        const slides = slider.querySelectorAll('.hero-slide-v2');
+        const dots = slider.querySelectorAll('.hero-dot-v2');
+        let current = 0;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+
+            current = index;
+        }
+
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', function () {
+                showSlide(index);
+            });
+        });
+
+        setInterval(function () {
+            let next = current + 1;
+            if (next >= slides.length) next = 0;
+            showSlide(next);
+        }, 4000);
+    });
+</script>
+@endif
 @endsection

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web\Auth;
 
+use App\Enums\SystemRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\Auth\RegisterWebRequest;
 use App\Models\User;
@@ -27,12 +28,17 @@ class RegisterController extends Controller
     {
         $data = $request->validated();
 
-        $user = User::create([
+        $user = User::query()->create([
             'name' => $data['name'],
-            'email' => $data['email'],
+            'email' => $data['email'] ?? null,
+            'phone' => $data['phone'],
             'password' => Hash::make($data['password']),
-            'account_type' => $data['account_type'],
+            'locale' => app()->getLocale(),
+            'is_active' => true,
+            'account_type' => SystemRole::USER->value,
         ]);
+
+        $user->syncRoles([SystemRole::USER->value]);
 
         event(new Registered($user));
         Auth::login($user);
@@ -40,12 +46,12 @@ class RegisterController extends Controller
         $request->session()->regenerate();
         $request->session()->forget('url.intended');
 
-        if ($user->account_type === 'business') {
-            return redirect()->route('business-account.create')
-                ->with('success', __('messages.registered_successfully'));
-        }
+        $user->update([
+            'last_login_at' => now(),
+        ]);
 
-        return redirect()->route('home')
+        return redirect()
+            ->route('home')
             ->with('success', __('messages.registered_successfully'));
     }
 
