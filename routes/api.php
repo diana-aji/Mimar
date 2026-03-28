@@ -10,11 +10,13 @@ use App\Http\Controllers\Api\BusinessActivityType\BusinessActivityTypeController
 use App\Http\Controllers\Api\BusinessAccount\BusinessAccountController;
 use App\Http\Controllers\Api\Admin\BusinessAccountAdminController;
 use App\Http\Controllers\Api\Admin\CityMaterialPriceController;
+use App\Http\Controllers\Api\Admin\DynamicFieldController;
 use App\Http\Controllers\Api\Admin\EstimationTypeController;
 use App\Http\Controllers\Api\Admin\MaterialTypeController;
 use App\Http\Controllers\Api\Service\ServiceController;
 use App\Http\Controllers\Api\Admin\ServiceAdminController;
 use App\Http\Controllers\Api\Chat\ChatController;
+use App\Http\Controllers\Api\DynamicField\PublicDynamicFieldController;
 use App\Http\Controllers\Api\Estimation\EstimationController;
 use App\Http\Controllers\Api\Favorite\FavoriteController;
 use App\Http\Controllers\Api\Notification\DeviceTokenController;
@@ -51,7 +53,22 @@ Route::prefix('v1')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout']);
         });
     });
+   Route::prefix('admin/dynamic-fields')->group(function () { 
+    Route::middleware(['auth:sanctum', 'permission:view-dynamic-fields'])
+        ->get('/', [DynamicFieldController::class, 'index']);
 
+    Route::middleware(['auth:sanctum', 'permission:create-dynamic-fields'])
+        ->post('/', [DynamicFieldController::class, 'store']);
+
+    Route::middleware(['auth:sanctum', 'permission:view-dynamic-fields'])
+        ->get('/{dynamicField}', [DynamicFieldController::class, 'show']);
+
+    Route::middleware(['auth:sanctum', 'permission:edit-dynamic-fields'])
+        ->put('/{dynamicField}', [DynamicFieldController::class, 'update']);
+
+    Route::middleware(['auth:sanctum', 'permission:delete-dynamic-fields'])
+        ->delete('/{dynamicField}', [DynamicFieldController::class, 'destroy']);
+});
     /*
     |--------------------------------------------------------------------------
     | Home
@@ -362,4 +379,8 @@ Route::prefix('v1')->group(function () {
         Route::middleware(['auth:sanctum', 'permission:delete-city-material-prices'])
             ->delete('/{cityMaterialPrice}', [CityMaterialPriceController::class, 'destroy']);
     });
+    Route::middleware(['auth:sanctum'])->get(
+    '/dynamic-fields/by-category',
+    [PublicDynamicFieldController::class, 'byCategory']
+);
 });

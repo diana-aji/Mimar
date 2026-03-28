@@ -90,4 +90,8 @@ class Service extends Model
     {
         return $this->images->firstWhere('is_primary', true) ?? $this->images->first();
     }
+    public function dynamicFieldValues()
+{
+    return $this->hasMany(ServiceDynamicFieldValue::class);
+}
 }

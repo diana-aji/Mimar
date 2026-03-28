@@ -30,10 +30,13 @@ class DatabaseSeeder extends Seeder
             CityMaterialPriceSeeder::class,
             
         ]);
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'password' => bcrypt('password'),
+            ]
+);
 
         $cities = [
             ['name_ar' => 'دمشق', 'name_en' => 'Damascus', 'sort_order' => 1],

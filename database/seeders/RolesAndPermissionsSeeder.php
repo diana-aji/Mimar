@@ -114,6 +114,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'create-city-material-prices',
             'edit-city-material-prices',
             'delete-city-material-prices',
+
+             'view-dynamic-fields',
+            'create-dynamic-fields',
+            'edit-dynamic-fields',
+            'delete-dynamic-fields',
         ];
 
         foreach ($permissions as $permission) {
