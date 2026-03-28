@@ -3,21 +3,15 @@
 namespace App\Services\Service;
 
 use App\Models\Service;
-use App\Models\BusinessAccount;
-use App\Models\User;
 use App\Models\DynamicField;
 use App\Exceptions\DomainException;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use App\Notifications\ServiceStatusChangedNotification;
 
-class ServiceService
+class PublicServiceService
 {
-    public function listForUser(User $user, BusinessAccount $businessAccount, array $filters = [])
+    public function browse(array $filters = [], $user = null)
     {
-        $this->ensureBusinessAccountOwnership($user, $businessAccount);
-
         $query = Service::query()
             ->with([
                 'businessAccount',
@@ -25,8 +19,12 @@ class ServiceService
                 'subcategory',
                 'images',
                 'dynamicFieldValues.dynamicField',
+                'ratings.user',
+                'favorites',
             ])
-            ->where('business_account_id', $businessAccount->id);
+            ->withAvg('ratings', 'rating')
+            ->withCount('ratings')
+            ->where('status', 'approved');
 
         if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
@@ -34,10 +32,6 @@ class ServiceService
 
         if (! empty($filters['subcategory_id'])) {
             $query->where('subcategory_id', $filters['subcategory_id']);
-        }
-
-        if (! empty($filters['status'])) {
-            $query->where('status', $filters['status']);
         }
 
         if (isset($filters['price_min']) && $filters['price_min'] !== '') {
@@ -51,21 +45,8 @@ class ServiceService
         if (! empty($filters['name'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('name_ar', 'like', '%' . $filters['name'] . '%')
-                  ->orWhere('name_en', 'like', '%' . $filters['name'] . '%');
+                    ->orWhere('name_en', 'like', '%' . $filters['name'] . '%');
             });
-        }
-
-        if (! empty($filters['dynamic_fields']) && is_array($filters['dynamic_fields'])) {
-            foreach ($filters['dynamic_fields'] as $fieldId => $value) {
-                if ($value === null || $value === '') {
-                    continue;
-                }
-
-                $query->whereHas('dynamicFieldValues', function ($q) use ($fieldId, $value) {
-                    $q->where('dynamic_field_id', $fieldId)
-                      ->where('value', (string) $value);
-                });
-            }
         }
 
         if (! empty($filters['dynamic_filters']) && is_array($filters['dynamic_filters'])) {
@@ -114,7 +95,53 @@ class ServiceService
             }
         }
 
-        return $query->latest()->get();
+        $services = $query->latest()->paginate(12);
+
+        if ($user) {
+            $favoriteServiceIds = $user->favorites()
+                ->pluck('service_id')
+                ->toArray();
+
+            $services->getCollection()->transform(function ($service) use ($favoriteServiceIds) {
+                $service->is_favorite = in_array($service->id, $favoriteServiceIds, true);
+                return $service;
+            });
+        } else {
+            $services->getCollection()->transform(function ($service) {
+                $service->is_favorite = false;
+                return $service;
+            });
+        }
+
+        return $services;
+    }
+
+    public function showApproved(int $serviceId, $user = null): Service
+    {
+        $service = Service::query()
+            ->with([
+                'businessAccount',
+                'category',
+                'subcategory',
+                'images',
+                'dynamicFieldValues.dynamicField',
+                'ratings.user',
+                'favorites',
+            ])
+            ->withAvg('ratings', 'rating')
+            ->withCount('ratings')
+            ->where('status', 'approved')
+            ->find($serviceId);
+
+        if (! $service) {
+            throw new DomainException(__('messages.not_found'));
+        }
+
+        $service->is_favorite = $user
+            ? $user->favorites()->where('service_id', $service->id)->exists()
+            : false;
+
+        return $service;
     }
 
     private function isAllowedOperatorForFieldType(string $fieldType, string $operator): bool
@@ -131,25 +158,15 @@ class ServiceService
 
     private function normalizeDynamicFilter(string $fieldType, string $operator, array $filter): array
     {
-        if ($fieldType !== 'boolean') {
-            return $filter;
-        }
-
-        if ($operator !== 'eq') {
-            return $filter;
-        }
-
-        if (! array_key_exists('value', $filter)) {
+        if ($fieldType !== 'boolean' || $operator !== 'eq' || ! array_key_exists('value', $filter)) {
             return $filter;
         }
 
         $normalized = $this->normalizeBooleanValue($filter['value']);
 
-        if ($normalized === null) {
-            return $filter;
+        if ($normalized !== null) {
+            $filter['value'] = $normalized;
         }
-
-        $filter['value'] = $normalized;
 
         return $filter;
     }
@@ -320,141 +337,5 @@ class ServiceService
         $date = \DateTime::createFromFormat('Y-m-d', $value);
 
         return $date !== false && $date->format('Y-m-d') === $value;
-    }
-
-    public function create(User $user, BusinessAccount $businessAccount, array $data): Service
-    {
-        $this->ensureBusinessAccountOwnership($user, $businessAccount);
-
-        if (! $businessAccount->isApproved()) {
-            throw new DomainException(__('messages.business_account_not_approved'));
-        }
-
-        return DB::transaction(function () use ($businessAccount, $data) {
-            $service = Service::query()->create([
-                'business_account_id' => $businessAccount->id,
-                'category_id' => $data['category_id'],
-                'subcategory_id' => $data['subcategory_id'],
-                'name_ar' => $data['name_ar'],
-                'name_en' => $data['name_en'],
-                'description' => $data['description'] ?? null,
-                'price' => $data['price'],
-                'status' => 'pending',
-                'rejection_reason' => null,
-                'approved_by' => null,
-                'approved_at' => null,
-                'rejected_by' => null,
-                'rejected_at' => null,
-            ]);
-
-            return $service->load([
-                'businessAccount',
-                'category',
-                'subcategory',
-                'images',
-                'dynamicFieldValues.dynamicField',
-            ]);
-        });
-    }
-
-    public function update(User $user, Service $service, array $data): Service
-    {
-        $this->ensureServiceOwnership($user, $service);
-
-        $newStatus = $service->status === 'approved' ? 'pending' : $service->status;
-
-        $service->update([
-            'category_id' => $data['category_id'],
-            'subcategory_id' => $data['subcategory_id'],
-            'name_ar' => $data['name_ar'],
-            'name_en' => $data['name_en'],
-            'description' => $data['description'] ?? null,
-            'price' => $data['price'],
-            'status' => $newStatus,
-            'rejection_reason' => null,
-            'approved_by' => null,
-            'approved_at' => null,
-            'rejected_by' => null,
-            'rejected_at' => null,
-        ]);
-
-        return $service->refresh()->load([
-            'businessAccount',
-            'category',
-            'subcategory',
-            'images',
-            'dynamicFieldValues.dynamicField',
-        ]);
-    }
-
-    public function delete(User $user, Service $service): void
-    {
-        $this->ensureServiceOwnership($user, $service);
-
-        $service->delete();
-    }
-
-    public function approve(User $admin, Service $service): Service
-    {
-        $service->update([
-            'status' => 'approved',
-            'rejection_reason' => null,
-            'approved_by' => $admin->id,
-            'approved_at' => now(),
-            'rejected_by' => null,
-            'rejected_at' => null,
-        ]);
-
-        $service->businessAccount?->user?->notify(
-            new ServiceStatusChangedNotification($service)
-        );
-
-        return $service->refresh()->load([
-            'businessAccount',
-            'category',
-            'subcategory',
-            'images',
-            'dynamicFieldValues.dynamicField',
-        ]);
-    }
-
-    public function reject(User $admin, Service $service, string $reason): Service
-    {
-        $service->update([
-            'status' => 'rejected',
-            'rejection_reason' => $reason,
-            'approved_by' => null,
-            'approved_at' => null,
-            'rejected_by' => $admin->id,
-            'rejected_at' => now(),
-        ]);
-
-        $service->businessAccount?->user?->notify(
-            new ServiceStatusChangedNotification($service)
-        );
-
-        return $service->refresh()->load([
-            'businessAccount',
-            'category',
-            'subcategory',
-            'images',
-            'dynamicFieldValues.dynamicField',
-        ]);
-    }
-
-    protected function ensureBusinessAccountOwnership(User $user, BusinessAccount $businessAccount): void
-    {
-        if ((int) $businessAccount->user_id !== (int) $user->id) {
-            throw new DomainException(__('messages.forbidden'));
-        }
-    }
-
-    protected function ensureServiceOwnership(User $user, Service $service): void
-    {
-        $service->loadMissing('businessAccount');
-
-        if (! $service->businessAccount || (int) $service->businessAccount->user_id !== (int) $user->id) {
-            throw new DomainException(__('messages.forbidden'));
-        }
     }
 }

@@ -25,6 +25,14 @@ class ServiceResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
 
+            'ratings_avg' => $this->ratings_avg_rating !== null
+                ? round((float) $this->ratings_avg_rating, 2)
+                : 0,
+
+            'ratings_count' => $this->ratings_count ?? 0,
+
+            'is_favorite' => (bool) ($this->is_favorite ?? false),
+
             'business_account' => $this->whenLoaded('businessAccount', fn () => [
                 'id' => $this->businessAccount?->id,
                 'name_ar' => $this->businessAccount?->name_ar,
@@ -42,6 +50,48 @@ class ServiceResource extends JsonResource
                 'name_ar' => $this->subcategory?->name_ar,
                 'name_en' => $this->subcategory?->name_en,
             ]),
+
+            'images' => $this->whenLoaded('images', function () {
+                return $this->images->map(fn ($image) => [
+                    'id' => $image->id,
+                    'image_path' => $image->image_path,
+                    'image_url' => $image->image_url ?? null,
+                    'is_primary' => $image->is_primary,
+                    'sort_order' => $image->sort_order,
+                ]);
+            }),
+
+            'dynamic_fields' => $this->whenLoaded('dynamicFieldValues', function () {
+                return $this->dynamicFieldValues->map(function ($item) {
+                    return [
+                        'field_id' => $item->dynamic_field_id,
+                        'label_ar' => $item->dynamicField?->label_ar,
+                        'label_en' => $item->dynamicField?->label_en,
+                        'key' => $item->dynamicField?->key,
+                        'type' => $item->dynamicField?->type,
+                        'value' => $item->value,
+                    ];
+                });
+            }),
+
+            'latest_ratings' => $this->whenLoaded('ratings', function () {
+                return $this->ratings
+                    ->sortByDesc('created_at')
+                    ->take(5)
+                    ->values()
+                    ->map(function ($rating) {
+                        return [
+                            'id' => $rating->id,
+                            'rating' => $rating->rating,
+                            'comment' => $rating->comment,
+                            'created_at' => $rating->created_at,
+                            'user' => [
+                                'id' => $rating->user?->id,
+                                'name' => $rating->user?->name,
+                            ],
+                        ];
+                    });
+            }),
         ];
     }
 }

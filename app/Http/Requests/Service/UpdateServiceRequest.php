@@ -20,6 +20,9 @@ class UpdateServiceRequest extends FormRequest
             'name_en' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
+
+            'dynamic_fields' => ['nullable', 'array'],
+            'dynamic_fields.*' => ['nullable'],
         ];
     }
 
@@ -32,6 +35,7 @@ class UpdateServiceRequest extends FormRequest
             'name_en' => __('messages.attributes.name_en'),
             'description' => __('messages.attributes.description'),
             'price' => __('messages.attributes.price'),
+            'dynamic_fields' => 'الحقول الديناميكية',
         ];
     }
 }

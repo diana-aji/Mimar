@@ -13,7 +13,6 @@ use App\Http\Requests\Service\UpdateServiceRequest;
 use App\Http\Resources\Service\ServiceResource;
 use App\Models\DynamicField;
 use App\Models\ServiceDynamicFieldValue;
-use Illuminate\Support\Facades\DB;
 
 class ServiceController extends ApiController
 {
@@ -24,15 +23,16 @@ class ServiceController extends ApiController
 
     public function index(Request $request, BusinessAccount $businessAccount): JsonResponse
     {
-        $services = $this->service->listForUser($request->user(), $businessAccount);
+        $services = $this->service->listForUser(
+            $request->user(),
+            $businessAccount,
+            $request->all()
+        );
 
         return $this->successResponse(
             ServiceResource::collection($services),
             __('messages.success')
         );
-        $service->load([
-    'dynamicFieldValues.dynamicField'
-         ]);
     }
 
     public function store(
@@ -45,55 +45,21 @@ class ServiceController extends ApiController
             $request->validated()
         );
 
+        $this->syncDynamicFields($service, $request->input('dynamic_fields', []));
+
+        $service->load([
+            'businessAccount',
+            'category',
+            'subcategory',
+            'images',
+            'dynamicFieldValues.dynamicField',
+        ]);
+
         return $this->successResponse(
             new ServiceResource($service),
             __('messages.created_successfully'),
             201
         );
-        DB::transaction(function () use ($request, &$service) {
-    $service = Service::create([
-        // حقول الخدمة الحالية عندك
-    ]);
-
-    $dynamicValues = $request->input('dynamic_fields', []);
-
-    if (!empty($dynamicValues)) {
-        $fieldIds = array_keys($dynamicValues);
-
-        $fields = DynamicField::whereIn('id', $fieldIds)
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('id');
-
-        foreach ($dynamicValues as $fieldId => $value) {
-            $field = $fields->get((int) $fieldId);
-
-            if (!$field) {
-                continue;
-            }
-
-            if ($field->is_required && ($value === null || $value === '')) {
-                abort(response()->json([
-                    'message' => "الحقل {$field->label_ar} مطلوب."
-                ], 422));
-            }
-
-            if ($field->type === 'select' && !empty($field->options)) {
-                if (!in_array($value, $field->options, true)) {
-                    abort(response()->json([
-                        'message' => "القيمة المدخلة للحقل {$field->label_ar} غير صالحة."
-                    ], 422));
-                }
-            }
-
-            ServiceDynamicFieldValue::create([
-                'service_id' => $service->id,
-                'dynamic_field_id' => $field->id,
-                'value' => is_array($value) ? json_encode($value) : (string) $value,
-            ]);
-        }
-    }
-});
     }
 
     public function update(UpdateServiceRequest $request, Service $service): JsonResponse
@@ -104,52 +70,20 @@ class ServiceController extends ApiController
             $request->validated()
         );
 
+        $this->syncDynamicFields($service, $request->input('dynamic_fields', []));
+
+        $service->load([
+            'businessAccount',
+            'category',
+            'subcategory',
+            'images',
+            'dynamicFieldValues.dynamicField',
+        ]);
+
         return $this->successResponse(
             new ServiceResource($service),
             __('messages.updated_successfully')
         );
-        $dynamicValues = $request->input('dynamic_fields', []);
-
-    if (!empty($dynamicValues)) {
-        $fieldIds = array_keys($dynamicValues);
-
-        $fields = DynamicField::whereIn('id', $fieldIds)
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('id');
-
-        foreach ($dynamicValues as $fieldId => $value) {
-            $field = $fields->get((int) $fieldId);
-
-            if (!$field) {
-                continue;
-            }
-
-            if ($field->is_required && ($value === null || $value === '')) {
-                return response()->json([
-                    'message' => "الحقل {$field->label_ar} مطلوب."
-                ], 422);
-            }
-
-            if ($field->type === 'select' && !empty($field->options)) {
-                if (!in_array($value, $field->options, true)) {
-                    return response()->json([
-                        'message' => "القيمة المدخلة للحقل {$field->label_ar} غير صالحة."
-                    ], 422);
-                }
-            }
-
-            \App\Models\ServiceDynamicFieldValue::updateOrCreate(
-                [
-                    'service_id' => $service->id,
-                    'dynamic_field_id' => $field->id,
-                ],
-                [
-                    'value' => is_array($value) ? json_encode($value) : (string) $value,
-                ]
-        );
-    }
-}
     }
 
     public function destroy(Request $request, Service $service): JsonResponse
@@ -160,5 +94,51 @@ class ServiceController extends ApiController
             null,
             __('messages.deleted_successfully')
         );
+    }
+
+    private function syncDynamicFields(Service $service, array $dynamicValues = []): void
+    {
+        if (empty($dynamicValues)) {
+            return;
+        }
+
+        $fieldIds = array_keys($dynamicValues);
+
+        $fields = DynamicField::whereIn('id', $fieldIds)
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('id');
+
+        foreach ($dynamicValues as $fieldId => $value) {
+            $field = $fields->get((int) $fieldId);
+
+            if (! $field) {
+                continue;
+            }
+
+            if ($field->is_required && ($value === null || $value === '')) {
+                abort(response()->json([
+                    'message' => "الحقل {$field->label_ar} مطلوب."
+                ], 422));
+            }
+
+            if ($field->type === 'select' && ! empty($field->options)) {
+                if (! in_array($value, $field->options, true)) {
+                    abort(response()->json([
+                        'message' => "القيمة المدخلة للحقل {$field->label_ar} غير صالحة."
+                    ], 422));
+                }
+            }
+
+            ServiceDynamicFieldValue::updateOrCreate(
+                [
+                    'service_id' => $service->id,
+                    'dynamic_field_id' => $field->id,
+                ],
+                [
+                    'value' => is_array($value) ? json_encode($value) : (string) $value,
+                ]
+            );
+        }
     }
 }

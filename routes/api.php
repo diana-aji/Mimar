@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\AppContentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\City\CityController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Api\Admin\EstimationTypeController;
 use App\Http\Controllers\Api\Admin\MaterialTypeController;
 use App\Http\Controllers\Api\Service\ServiceController;
 use App\Http\Controllers\Api\Admin\ServiceAdminController;
+use App\Http\Controllers\Api\AppContent\PublicAppContentController;
 use App\Http\Controllers\Api\Chat\ChatController;
 use App\Http\Controllers\Api\DynamicField\PublicDynamicFieldController;
 use App\Http\Controllers\Api\Estimation\EstimationController;
@@ -24,6 +26,7 @@ use App\Http\Controllers\Api\Notification\NotificationController;
 use App\Http\Controllers\Api\Order\OrderController;
 use App\Http\Controllers\Api\Rating\RatingController;
 use App\Http\Controllers\Api\Report\ServiceReportController;
+use App\Http\Controllers\Api\Service\PublicServiceController;
 
 Route::prefix('v1')->group(function () {
 
@@ -382,5 +385,19 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum'])->get(
     '/dynamic-fields/by-category',
     [PublicDynamicFieldController::class, 'byCategory']
-);
+    );
+    Route::prefix('admin/app-contents')->group(function () {
+    Route::get('/', [AppContentController::class, 'index']);
+    Route::post('/', [AppContentController::class, 'store']);
+    Route::get('/{appContent}', [AppContentController::class, 'show']);
+    Route::put('/{appContent}', [AppContentController::class, 'update']);
+    Route::delete('/{appContent}', [AppContentController::class, 'destroy']);
+});
+
+  Route::get('/app-content/privacy-policy', [PublicAppContentController::class, 'privacyPolicy']);
+  Route::get('/app-content/terms-of-use', [PublicAppContentController::class, 'termsOfUse']);
+
+
+  Route::get('/services', [PublicServiceController::class, 'index']);
+  Route::get('/services/{serviceId}', [PublicServiceController::class, 'show']);
 });

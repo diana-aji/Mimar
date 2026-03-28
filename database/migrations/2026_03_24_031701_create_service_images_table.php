@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('path');
             $table->boolean('is_primary')->default(false);
             $table->unsignedInteger('sort_order')->default(1);
+            $table->string('image_path');
             $table->timestamps();
         });
     }
