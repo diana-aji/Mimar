@@ -1,59 +1,236 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Mi'mar Platform  
+## Real Estate Services and Smart Estimation System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Project Overview
+Mi'mar is a digital platform developed to organize and improve the real estate services sector by connecting service providers with clients inside a structured and supervised environment.  
+The project aims to replace traditional and unorganized communication methods with a reliable system that supports account verification, business account approval, service review, order management, ratings, favorites, reports, notifications, and direct communication between users and service providers. The system description and functional requirements also specify these core workflows, including business account review, service approval, browsing and filtering, ordering, ratings, favorites, reports, and administrative control. fileciteturn0file0L1-L17 fileciteturn0file0L56-L71
 
-## About Laravel
+In addition to the core marketplace functions, the project includes an advanced proposed feature: a **quantity and cost estimation module** for small construction and finishing projects. This feature transforms the platform from a digital marketplace into a decision-support tool that helps users estimate materials, costs, and related services before التنفيذ. The uploaded project document describes this as a key practical enhancement to support planning and reduce randomness in cost estimation. fileciteturn0file0L1-L17
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Problem Statement
+The real estate services field often depends on direct personal communication and informal coordination, which leads to:
+- Difficulty finding suitable service providers
+- Weak organization of requests and offers
+- Limited transparency and trust
+- No structured review or approval process
+- No reliable method for ratings, reporting, and service quality control
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Mi'mar addresses these issues through a managed platform with role-based administration and clear workflows for users, business accounts, and services. fileciteturn0file0L1-L17
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Objectives
+The main objectives of the project are:
+- Build a trusted digital environment for real estate services
+- Allow users to create and manage business accounts
+- Allow service providers to publish services after approval
+- Enable clients to browse, filter, request, rate, and favorite services
+- Provide administrators with complete control over categories, cities, reports, business accounts, and services
+- Add a smart estimation module for quantities and costs in small construction projects
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## System Components
+The platform consists of three main parts:
+1. **Mobile / API side for users**
+2. **Administrative dashboard**
+3. **Backend system** for business logic, permissions, validation, review, and workflow control
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+The project document explicitly describes the platform as a complete system composed of a user application, an admin dashboard, and a backend responsible for operations, verification, and permissions. fileciteturn0file0L1-L17
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Main Features
 
-## Contributing
+### 1. Authentication
+- User registration
+- OTP-based verification
+- Login and logout
+- Profile management
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 2. Business Accounts
+- Create business account
+- Attach business information and location
+- Submit for review
+- Admin approval or rejection
+- Support for more than one business account per user
 
-## Code of Conduct
+The document states that a user cannot add or request a service without having an approved business account, and that accounts pass through a review cycle before activation. fileciteturn0file0L17-L33
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 3. Service Management
+- Add service through approved business account
+- Assign category and subcategory
+- Set names, description, price, and location
+- Support for review workflow
+- Edit and delete services
+- Admin approval or rejection of services
 
-## Security Vulnerabilities
+The uploaded specification describes the service lifecycle and its approval states as pending, approved, and rejected. fileciteturn0file0L33-L48
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 4. Dynamic Fields
+- Dynamic custom fields linked to categories and subcategories
+- Support for flexible service attributes
+- Used to adapt service forms according to service type
 
-## License
+The project requirements include dedicated functional requirements for creating, updating, and deleting dynamic custom fields. fileciteturn0file0L113-L134
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 5. Browsing and Filtering
+- Browse categories and subcategories
+- Search by name
+- Filter by category, subcategory, type, location, and price
+- View service details
+- View ratings
+- Add to favorites
+- Report inappropriate services
+
+The project document specifically mentions service browsing, filtering, favorites, reporting, and ratings in the service details flow. fileciteturn0file0L48-L63
+
+### 6. Orders
+- Send order for a service
+- View sent and received orders
+- Accept, reject, or cancel orders
+- Track request flow between client and provider
+
+The requirements section includes sending, receiving, accepting, rejecting, and deleting service orders. fileciteturn0file0L113-L134
+
+### 7. Ratings and Reviews
+- Users can rate services after valid order flow
+- Ratings include score and comments
+- Display average rating and user comments
+
+The document states that rating is only allowed after a prior order and acceptance by the service provider. fileciteturn0file0L63-L66
+
+### 8. Favorites
+- Add service to favorites
+- Remove service from favorites
+- View favorite services list
+
+### 9. Reports
+- Report inappropriate services
+- Admin reviews and resolves reports
+
+### 10. Notifications
+- Unread and read notifications
+- Mark notification as read
+- Mark all as read
+- Device token registration for push notifications
+
+### 11. Chat
+- Direct conversation between client and service provider
+- Text messaging
+- Read status
+- Conversation linked to a service
+
+The document also lists direct messaging with providers as an additional feature available from the service details page. fileciteturn0file0L66-L71
+
+### 12. Sliders and Static Content
+- Advertising slider management
+- Privacy Policy page
+- Terms of Use page
+
+The functional requirements include management of the advertising slider and cities, while the general system description mentions privacy policy and terms of use in settings. fileciteturn0file0L66-L71 fileciteturn0file0L113-L134
+
+### 13. Estimation Module
+A smart module for estimating quantities and costs for small construction or finishing works.  
+This feature allows the user to:
+- Select the type of work
+- Enter dimensions
+- Calculate required quantities
+- Estimate material cost
+- Link results with available services and materials in the platform
+
+This directly supports the proposed academic enhancement described for the project. fileciteturn0file0L1-L17
+
+---
+
+## Functional Requirements Summary
+The uploaded project document defines the system through a detailed functional requirements list covering:
+- User account creation and profile updates
+- Business account workflows
+- Service CRUD and approval
+- Categories and subcategories management
+- Dynamic custom fields
+- Orders
+- Ratings
+- Favorites
+- Reports
+- Slider management
+- Cities
+- Roles and permissions
+- Admin creation and authorization management fileciteturn0file0L113-L134
+
+---
+
+## Proposed Feature: Quantity and Cost Estimation Module
+### Academic Description
+To enhance the platform and move beyond its role as only a marketplace for real estate services, a smart module was proposed to support users during the pre-execution phase of small construction projects. This module helps users estimate project quantities and approximate costs before requesting services.
+
+### Purpose
+The module transforms the platform into a **Decision Support System** by allowing users to:
+- Estimate quantities of required materials
+- Approximate project costs
+- Improve planning before execution
+- Connect estimation results with service providers already available inside the platform
+
+### Inputs
+The user can provide:
+- Work type
+- Length
+- Width
+- Height when needed
+- City
+
+### Outputs
+The system can calculate:
+- Area or volume
+- Estimated material quantities
+- Estimated project cost
+- Matching available services or providers
+
+### Technical Value
+This feature relies on:
+- Mathematical formulas
+- City-based material pricing
+- Database queries
+- Organized business logic
+
+It does not require complex artificial intelligence, but it provides strong practical value and future scalability.
+
+---
+
+## Technology Stack
+- **Laravel**
+- **PHP**
+- **MySQL**
+- **Laravel Sanctum**
+- **Spatie Laravel Permission**
+- **Blade**
+- **REST API**
+- **Bootstrap / Admin UI** depending on current implementation
+- **Notifications system**
+- **File upload and storage handling**
+
+---
+
+## Project Structure
+```text
+app/
+  Http/
+    Controllers/
+    Requests/
+    Resources/
+  Models/
+  Services/
+
+database/
+  migrations/
+  seeders/
+
+routes/
+  api.php
+  web.php
+
+resources/
+  views/
