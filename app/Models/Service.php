@@ -20,6 +20,7 @@ class Service extends Model
         'name_en',
         'description',
         'price',
+        'currency',
         'status',
         'rejection_reason',
         'approved_by',
@@ -35,6 +36,9 @@ class Service extends Model
         return [
             'approved_at' => 'datetime',
             'rejected_at' => 'datetime',
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
+            'price' => 'decimal:2',
         ];
     }
 
@@ -92,8 +96,38 @@ class Service extends Model
     {
         return $this->images->firstWhere('is_primary', true) ?? $this->images->first();
     }
-    public function dynamicFieldValues()
-{
-    return $this->hasMany(ServiceDynamicFieldValue::class);
-}
+
+    public function dynamicFieldValues(): HasMany
+    {
+        return $this->hasMany(ServiceDynamicFieldValue::class);
+    }
+
+    public function formattedPrice(): string
+    {
+        return number_format((float) $this->price, 2) . ' ' . ($this->currency ?? 'SYP');
+    }
+
+    public function convertedPrice(string $displayCurrency = 'SYP'): float
+    {
+        $serviceCurrency = $this->currency ?? 'SYP';
+
+        if ($serviceCurrency === $displayCurrency) {
+            return (float) $this->price;
+        }
+
+        $rate = ExchangeRate::activeRate($serviceCurrency, $displayCurrency);
+
+        if (! $rate) {
+            return (float) $this->price;
+        }
+
+        return (float) $this->price * $rate;
+    }
+
+    public function formattedPriceFor(string $displayCurrency = 'SYP'): string
+    {
+        $converted = $this->convertedPrice($displayCurrency);
+
+        return number_format($converted, 2) . ' ' . $displayCurrency;
+    }
 }

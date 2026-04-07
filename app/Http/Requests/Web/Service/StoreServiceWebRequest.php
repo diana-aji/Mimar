@@ -16,13 +16,23 @@ class StoreServiceWebRequest extends FormRequest
         return [
             'business_account_id' => ['required', 'exists:business_accounts,id'],
             'category_id' => ['required', 'exists:categories,id'],
-            'subcategory_id' => ['nullable', 'exists:subcategories,id'],
+            'subcategory_id' => ['required', 'exists:subcategories,id'],
+
             'name_ar' => ['required', 'string', 'max:255'],
-            'name_en' => ['nullable', 'string', 'max:255'],
-            'description' => ['required', 'string'],
+            'name_en' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+
             'price' => ['required', 'numeric', 'min:0'],
+            'currency' => ['required', 'in:SYP,USD'],
+
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+
+            'dynamic_fields' => ['nullable', 'array'],
+            'dynamic_fields.*' => ['nullable'],
         ];
     }
 
@@ -36,6 +46,9 @@ class StoreServiceWebRequest extends FormRequest
             'name_en' => __('messages.attributes.name_en'),
             'description' => __('messages.attributes.description'),
             'price' => __('messages.attributes.price'),
+            'currency' => __('messages.attributes.currency'),
+            'latitude' => __('messages.attributes.latitude'),
+            'longitude' => __('messages.attributes.longitude'),
             'images' => __('messages.attributes.images'),
             'images.*' => __('messages.attributes.image'),
         ];

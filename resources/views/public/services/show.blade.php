@@ -3,6 +3,25 @@
 @section('content')
     @php
         $isArabic = app()->getLocale() === 'ar';
+        $displayCurrency = session('display_currency', 'SYP');
+
+        $statusLabel = function ($status) use ($isArabic) {
+            return match ($status) {
+                'approved' => $isArabic ? 'مقبولة' : 'Approved',
+                'pending' => $isArabic ? 'قيد المراجعة' : 'Pending review',
+                'rejected' => $isArabic ? 'مرفوضة' : 'Rejected',
+                default => $status ?? '—',
+            };
+        };
+
+        $statusClass = function ($status) {
+            return match ($status) {
+                'approved' => 'service-status-approved',
+                'pending' => 'service-status-pending',
+                'rejected' => 'service-status-rejected',
+                default => '',
+            };
+        };
 
         $title = $isArabic
             ? ($service->name_ar ?? $service->name_en ?? '—')
@@ -45,6 +64,12 @@
             && (int) $service->businessAccount->user_id === (int) auth()->id();
 
         $hasLocation = ! is_null($service->latitude) && ! is_null($service->longitude);
+
+        $priceText = method_exists($service, 'formattedPriceFor')
+            ? $service->formattedPriceFor($displayCurrency)
+            : (method_exists($service, 'formattedPrice')
+                ? $service->formattedPrice()
+                : ($service->price ?? '—'));
     @endphp
 
     @if ($hasLocation)
@@ -146,6 +171,32 @@
             font-weight: 800;
         }
 
+        .service-status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .service-status-approved {
+            background: rgba(5,150,105,0.10);
+            color: #059669;
+        }
+
+        .service-status-pending {
+            background: rgba(245,158,11,0.12);
+            color: #d97706;
+        }
+
+        .service-status-rejected {
+            background: rgba(239,68,68,0.10);
+            color: #dc2626;
+        }
+
         .service-show-actions {
             display: flex;
             gap: 10px;
@@ -176,6 +227,22 @@
             border: 1px solid rgba(15,23,42,0.08);
         }
 
+        .display-currency-form {
+            margin: 0;
+        }
+
+        .display-currency-select {
+            height: 44px;
+            padding: 0 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(15,23,42,0.08);
+            background: #f8fafc;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 700;
+            outline: none;
+        }
+
         .service-show-gallery {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -190,6 +257,16 @@
             border-radius: 16px;
             border: 1px solid rgba(15,23,42,0.06);
             display: block;
+        }
+
+        .service-display-currency-note {
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(68,88,219,0.06);
+            color: #334155;
+            border: 1px solid rgba(68,88,219,0.10);
+            font-size: 12px;
+            line-height: 1.8;
         }
 
         .service-order-form {
@@ -510,15 +587,29 @@
                         {{ $description ?: ($isArabic ? 'لا يوجد وصف متاح حاليًا لهذه الخدمة.' : 'No description is currently available for this service.') }}
                     </p>
 
+                    <form method="POST" action="{{ route('display-currency.update') }}" class="display-currency-form">
+                        @csrf
+                        <select name="display_currency" onchange="this.form.submit()" class="display-currency-select">
+                            <option value="SYP" @selected($displayCurrency === 'SYP')>
+                                {{ $isArabic ? 'عرض بالليرة السورية' : 'Show in SYP' }}
+                            </option>
+                            <option value="USD" @selected($displayCurrency === 'USD')>
+                                {{ $isArabic ? 'عرض بالدولار' : 'Show in USD' }}
+                            </option>
+                        </select>
+                    </form>
+
                     <div class="service-show-meta">
                         <div class="service-show-meta-box">
-                            <span>{{ $isArabic ? 'السعر' : 'Price' }}</span>
-                            <strong>{{ $service->price ?? '—' }}</strong>
+                            <span>{{ $isArabic ? 'السعر المعروض' : 'Displayed price' }}</span>
+                            <strong>{{ $priceText }}</strong>
                         </div>
 
                         <div class="service-show-meta-box">
                             <span>{{ $isArabic ? 'الحالة' : 'Status' }}</span>
-                            <strong>{{ $service->status ?? '—' }}</strong>
+                            <strong class="service-status-badge {{ $statusClass($service->status) }}">
+                                {{ $statusLabel($service->status) }}
+                            </strong>
                         </div>
 
                         <div class="service-show-meta-box">
@@ -530,6 +621,13 @@
                             <span>{{ $isArabic ? 'التصنيف' : 'Category' }}</span>
                             <strong>{{ $categoryLabel }}</strong>
                         </div>
+                    </div>
+
+                    <div class="service-display-currency-note">
+                        {{ $isArabic
+                            ? 'السعر الظاهر حالياً معروض حسب عملة العرض المختارة للمستخدم: '
+                            : 'The currently shown price is displayed according to the user selected display currency: ' }}
+                        <strong>{{ $displayCurrency }}</strong>
                     </div>
 
                     @if ($averageRating)
@@ -673,9 +771,9 @@
                             </a>
 
                             <form method="POST"
-                                action="{{ route('services.destroy', $service) }}"
-                                style="margin:0;"
-                                onsubmit="return confirm('{{ $isArabic ? 'هل أنت متأكد من حذف هذه الخدمة؟' : 'Are you sure you want to delete this service?' }}');">
+                                  action="{{ route('services.destroy', $service) }}"
+                                  style="margin:0;"
+                                  onsubmit="return confirm('{{ $isArabic ? 'هل أنت متأكد من حذف هذه الخدمة؟' : 'Are you sure you want to delete this service?' }}');">
                                 @csrf
                                 @method('DELETE')
 

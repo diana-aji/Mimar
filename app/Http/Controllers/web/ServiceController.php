@@ -26,7 +26,23 @@ class ServiceController extends Controller
 
     public function index(Request $request): View
     {
-        $services = Service::with(['businessAccount', 'category', 'subcategory', 'images'])
+        $displayCurrency = $request->query('display_currency');
+
+        if (in_array($displayCurrency, ['SYP', 'USD'])) {
+            session(['display_currency' => $displayCurrency]);
+        }
+
+        $services = Service::query()
+            ->with(['businessAccount', 'category', 'subcategory', 'images'])
+            ->where(function ($query) {
+                $query->where('status', 'approved');
+
+                if (Auth::check()) {
+                    $query->orWhereHas('businessAccount', function ($businessQuery) {
+                        $businessQuery->where('user_id', Auth::id());
+                    });
+                }
+            })
             ->latest()
             ->paginate(12)
             ->withQueryString();
@@ -45,7 +61,21 @@ class ServiceController extends Controller
 
     public function show(Service $service): View
     {
-        $service->load(['businessAccount', 'category', 'subcategory', 'images']);
+        $service->load([
+            'businessAccount',
+            'category',
+            'subcategory',
+            'images',
+            'ratings.user',
+        ]);
+
+        $isOwner = Auth::check()
+            && $service->businessAccount
+            && (int) $service->businessAccount->user_id === (int) Auth::id();
+
+        if (! $isOwner && $service->status !== 'approved') {
+            abort(404);
+        }
 
         $businessAccounts = BusinessAccount::query()
             ->where('user_id', Auth::id())
@@ -67,9 +97,16 @@ class ServiceController extends Controller
 
     public function create(): View
     {
-        $businessAccounts = BusinessAccount::latest()->get();
-        $categories = Category::latest()->get();
-        $subcategories = Subcategory::latest()->get();
+        $businessAccounts = BusinessAccount::query()
+            ->where('user_id', Auth::id())
+            ->where('status', 'approved')
+            ->latest()
+            ->get();
+
+        abort_if($businessAccounts->isEmpty(), 403);
+
+        $categories = Category::query()->latest()->get();
+        $subcategories = Subcategory::query()->latest()->get();
 
         return view('public.services.create', compact(
             'businessAccounts',
@@ -80,8 +117,17 @@ class ServiceController extends Controller
 
     public function store(StoreServiceWebRequest $request): RedirectResponse
     {
+        $businessAccount = BusinessAccount::query()
+            ->where('id', $request->business_account_id)
+            ->where('user_id', Auth::id())
+            ->where('status', 'approved')
+            ->firstOrFail();
+
+        $validated = $request->validated();
+        $validated['business_account_id'] = $businessAccount->id;
+
         $service = $this->serviceWebService->create(
-            $request->validated(),
+            $validated,
             $request->file('images', [])
         );
 
@@ -92,11 +138,22 @@ class ServiceController extends Controller
 
     public function edit(Service $service): View
     {
-        $service->load(['images']);
+        $service->load(['images', 'businessAccount']);
 
-        $businessAccounts = BusinessAccount::latest()->get();
-        $categories = Category::latest()->get();
-        $subcategories = Subcategory::latest()->get();
+        abort_unless(
+            $service->businessAccount
+            && (int) $service->businessAccount->user_id === (int) Auth::id(),
+            403
+        );
+
+        $businessAccounts = BusinessAccount::query()
+            ->where('user_id', Auth::id())
+            ->where('status', 'approved')
+            ->latest()
+            ->get();
+
+        $categories = Category::query()->latest()->get();
+        $subcategories = Subcategory::query()->latest()->get();
 
         return view('public.services.edit', compact(
             'service',
@@ -108,9 +165,26 @@ class ServiceController extends Controller
 
     public function update(UpdateServiceWebRequest $request, Service $service): RedirectResponse
     {
+        $service->loadMissing('businessAccount');
+
+        abort_unless(
+            $service->businessAccount
+            && (int) $service->businessAccount->user_id === (int) Auth::id(),
+            403
+        );
+
+        $businessAccount = BusinessAccount::query()
+            ->where('id', $request->business_account_id)
+            ->where('user_id', Auth::id())
+            ->where('status', 'approved')
+            ->firstOrFail();
+
+        $validated = $request->validated();
+        $validated['business_account_id'] = $businessAccount->id;
+
         $service = $this->serviceWebService->update(
             $service,
-            $request->validated(),
+            $validated,
             $request->file('images', [])
         );
 
@@ -125,46 +199,24 @@ class ServiceController extends Controller
             abort(403);
         }
 
-        // التحقق أن الخدمة تعود للمستخدم الحالي عبر حساب الأعمال
         $service->loadMissing(['businessAccount', 'images']);
 
         if (! $service->businessAccount || (int) $service->businessAccount->user_id !== (int) Auth::id()) {
             abort(403, 'Unauthorized action.');
         }
 
-        // حذف الصور من التخزين
         foreach ($service->images as $image) {
             if (! empty($image->path) && Storage::disk('public')->exists($image->path)) {
                 Storage::disk('public')->delete($image->path);
             }
         }
 
-        // حذف العلاقات المرتبطة إن وجدت
-        if (method_exists($service, 'images')) {
-            $service->images()->delete();
-        }
-
-        if (method_exists($service, 'favorites')) {
-            $service->favorites()->delete();
-        }
-
-        if (method_exists($service, 'reports')) {
-            $service->reports()->delete();
-        }
-
-        if (method_exists($service, 'dynamicFieldValues')) {
-            $service->dynamicFieldValues()->delete();
-        }
-
-        // إذا عندك طلبات مرتبطة بالخدمة وما بدك تمنعي الحذف
-        if (method_exists($service, 'orders')) {
-            $service->orders()->delete();
-        }
-
-        // إذا عندك تقييمات مرتبطة بالخدمة
-        if (method_exists($service, 'ratings')) {
-            $service->ratings()->delete();
-        }
+        $service->images()->delete();
+        $service->favorites()->delete();
+        $service->reports()->delete();
+        $service->dynamicFieldValues()->delete();
+        $service->orders()->delete();
+        $service->ratings()->delete();
 
         $service->delete();
 

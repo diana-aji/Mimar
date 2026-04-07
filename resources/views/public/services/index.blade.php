@@ -4,6 +4,25 @@
     @php
         $isArabic = app()->getLocale() === 'ar';
         $favoriteIds = $favoriteIds ?? [];
+        $displayCurrency = session('display_currency', 'SYP');
+
+        $statusLabel = function ($status) use ($isArabic) {
+            return match ($status) {
+                'approved' => $isArabic ? 'مقبولة' : 'Approved',
+                'pending' => $isArabic ? 'قيد المراجعة' : 'Pending review',
+                'rejected' => $isArabic ? 'مرفوضة' : 'Rejected',
+                default => $status ?? '—',
+            };
+        };
+
+        $statusClass = function ($status) {
+            return match ($status) {
+                'approved' => 'service-status-approved',
+                'pending' => 'service-status-pending',
+                'rejected' => 'service-status-rejected',
+                default => '',
+            };
+        };
 
         $resolveServiceTitle = function ($service) use ($isArabic) {
             return $isArabic
@@ -167,6 +186,22 @@
             font-size: 14px;
         }
 
+        .display-currency-form {
+            margin: 0;
+        }
+
+        .display-currency-select {
+            height: 40px;
+            padding: 0 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(15,23,42,0.08);
+            background: #f8fafc;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 700;
+            outline: none;
+        }
+
         .services-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -273,6 +308,32 @@
             color: #24304d;
             font-size: 14px;
             font-weight: 800;
+        }
+
+        .service-status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
+            padding: 0 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .service-status-approved {
+            background: rgba(5,150,105,0.10);
+            color: #059669;
+        }
+
+        .service-status-pending {
+            background: rgba(245,158,11,0.12);
+            color: #d97706;
+        }
+
+        .service-status-rejected {
+            background: rgba(239,68,68,0.10);
+            color: #dc2626;
         }
 
         .service-actions {
@@ -385,6 +446,18 @@
                         </a>
                     @endcan
 
+                    <form method="POST" action="{{ route('display-currency.update') }}" class="display-currency-form">
+                        @csrf
+                        <select name="display_currency" onchange="this.form.submit()" class="display-currency-select">
+                            <option value="SYP" @selected($displayCurrency === 'SYP')>
+                                {{ $isArabic ? 'عرض بالليرة السورية' : 'Show in SYP' }}
+                            </option>
+                            <option value="USD" @selected($displayCurrency === 'USD')>
+                                {{ $isArabic ? 'عرض بالدولار' : 'Show in USD' }}
+                            </option>
+                        </select>
+                    </form>
+
                     <div class="services-count">
                         {{ $isArabic ? 'إجمالي النتائج:' : 'Total results:' }} {{ $services->total() }}
                     </div>
@@ -407,6 +480,12 @@
                             $isOwner = auth()->check()
                                 && $service->businessAccount
                                 && (int) $service->businessAccount->user_id === (int) auth()->id();
+
+                            $priceText = method_exists($service, 'formattedPriceFor')
+                                ? $service->formattedPriceFor($displayCurrency)
+                                : (method_exists($service, 'formattedPrice')
+                                    ? $service->formattedPrice()
+                                    : ($service->price ?? '—'));
                         @endphp
 
                         <article class="service-card">
@@ -430,18 +509,23 @@
                                 <h3 class="service-title">{{ $title }}</h3>
 
                                 <p class="service-text">
-                                    {{ \Illuminate\Support\Str::limit($description ?: ($isArabic ? 'لا يوجد وصف متاح حاليًا لهذه الخدمة.' : 'No description is currently available for this service.'), 150) }}
+                                    {{ \Illuminate\Support\Str::limit(
+                                        $description ?: ($isArabic ? 'لا يوجد وصف متاح حاليًا لهذه الخدمة.' : 'No description is currently available for this service.'),
+                                        150
+                                    ) }}
                                 </p>
 
                                 <div class="service-meta">
                                     <div class="service-meta-box">
-                                        <span>{{ $isArabic ? 'السعر' : 'Price' }}</span>
-                                        <strong>{{ $service->price ?? '—' }}</strong>
+                                        <span>{{ $isArabic ? 'السعر المعروض' : 'Displayed price' }}</span>
+                                        <strong>{{ $priceText }}</strong>
                                     </div>
 
                                     <div class="service-meta-box">
                                         <span>{{ $isArabic ? 'الحالة' : 'Status' }}</span>
-                                        <strong>{{ $service->status ?? '—' }}</strong>
+                                        <strong class="service-status-badge {{ $statusClass($service->status) }}">
+                                            {{ $statusLabel($service->status) }}
+                                        </strong>
                                     </div>
 
                                     <div class="service-meta-box">
@@ -466,9 +550,9 @@
                                         </a>
 
                                         <form method="POST"
-                                            action="{{ route('services.destroy', $service) }}"
-                                            style="margin:0;"
-                                            onsubmit="return confirm('{{ $isArabic ? 'هل أنت متأكد من حذف هذه الخدمة؟' : 'Are you sure you want to delete this service?' }}');">
+                                              action="{{ route('services.destroy', $service) }}"
+                                              style="margin:0;"
+                                              onsubmit="return confirm('{{ $isArabic ? 'هل أنت متأكد من حذف هذه الخدمة؟' : 'Are you sure you want to delete this service?' }}');">
                                             @csrf
                                             @method('DELETE')
 

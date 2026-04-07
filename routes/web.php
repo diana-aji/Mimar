@@ -30,6 +30,7 @@ use App\Http\Controllers\Web\Admin\ServiceAdminController as WebAdminServiceCont
 use App\Http\Controllers\Web\Admin\SubcategoryAdminController;
 use App\Http\Controllers\Web\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Web\Admin\DashboardAdminController;
+use App\Http\Controllers\Web\Admin\ExchangeRateAdminController;
 
 use App\Http\Controllers\Web\CategoryController;
 use App\Http\Controllers\Web\ChatController;
@@ -50,12 +51,18 @@ Route::get('/lang/{locale}', function ($locale) {
     return redirect()->back();
 })->name('lang.switch');
 
+Route::get('/currency/{currency}', function ($currency) {
+    if (in_array($currency, ['SYP', 'USD'])) {
+        session(['display_currency' => $currency]);
+    }
+
+    return redirect()->back();
+})->name('currency.switch');
+
 /*
 |--------------------------------------------------------------------------
 | Guest Routes
 |--------------------------------------------------------------------------
-| /login      => user login
-| /dashboard  => admin login
 */
 Route::middleware('guest')->group(function () {
     Route::get('/login', [OtpLoginController::class, 'showLoginForm'])->name('login');
@@ -100,7 +107,6 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
-    Route::get('/services/{service}', [ServiceController::class, 'show'])->name('services.show');
 
     Route::middleware('permission:create-services')->group(function () {
         Route::get('/services/create', [ServiceController::class, 'create'])->name('services.create');
@@ -116,6 +122,18 @@ Route::middleware('auth')->group(function () {
         Route::delete('/services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
     });
 
+    Route::get('/services/{service}', [ServiceController::class, 'show'])->name('services.show');
+
+    Route::post('/display-currency', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'display_currency' => ['required', 'in:SYP,USD'],
+        ]);
+
+        session(['display_currency' => $request->display_currency]);
+
+        return back();
+    })->name('display-currency.update');
+
     /*
     |--------------------------------------------------------------------------
     | Estimations
@@ -130,6 +148,8 @@ Route::middleware('auth')->group(function () {
                 ->get(),
         ]);
     })->name('estimations.create');
+
+    Route::post('/estimations/calculate', [EstimationController::class, 'calculate'])->name('estimations.calculate');
 
     /*
     |--------------------------------------------------------------------------
@@ -177,18 +197,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/services/{service}/chat', [ChatController::class, 'startFromService'])->name('chat.start-from-service');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-
-
-    Route::post('/estimations/calculate', [EstimationController::class, 'calculate'])->name('estimations.calculate');
-
-
 });
 
 /*
 |--------------------------------------------------------------------------
 | Admin Routes
 |--------------------------------------------------------------------------
-| /admin/dashboard => admin panel after admin login
 */
 Route::middleware(['auth', 'role_or_permission:super-admin|admin'])
     ->prefix('admin')
@@ -217,8 +231,13 @@ Route::middleware(['auth', 'role_or_permission:super-admin|admin'])
             Route::delete('/roles/{role}', [RoleAdminController::class, 'destroy'])->name('admin.roles.destroy');
         });
 
+        /*
+        |--------------------------------------------------------------------------
+        | City Material Prices
+        |--------------------------------------------------------------------------
+        */
         Route::get('/city-material-prices', [CityMaterialPriceAdminController::class, 'index'])
-    ->name('admin.city-material-prices.index');
+            ->name('admin.city-material-prices.index');
 
         Route::post('/city-material-prices', [CityMaterialPriceAdminController::class, 'store'])
             ->name('admin.city-material-prices.store');
@@ -228,6 +247,23 @@ Route::middleware(['auth', 'role_or_permission:super-admin|admin'])
 
         Route::delete('/city-material-prices/{cityMaterialPrice}', [CityMaterialPriceAdminController::class, 'destroy'])
             ->name('admin.city-material-prices.destroy');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Exchange Rates
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/exchange-rates', [ExchangeRateAdminController::class, 'index'])
+            ->name('admin.exchange-rates.index');
+
+        Route::post('/exchange-rates', [ExchangeRateAdminController::class, 'store'])
+            ->name('admin.exchange-rates.store');
+
+        Route::put('/exchange-rates/{exchangeRate}', [ExchangeRateAdminController::class, 'update'])
+            ->name('admin.exchange-rates.update');
+
+        Route::delete('/exchange-rates/{exchangeRate}', [ExchangeRateAdminController::class, 'destroy'])
+            ->name('admin.exchange-rates.destroy');
 
         /*
         |--------------------------------------------------------------------------

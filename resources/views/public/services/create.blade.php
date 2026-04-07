@@ -208,6 +208,16 @@
             font-weight: 700;
         }
 
+        .service-currency-note {
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(68,88,219,0.06);
+            color: #334155;
+            font-size: 12px;
+            line-height: 1.8;
+            border: 1px solid rgba(68,88,219,0.10);
+        }
+
         @media (max-width: 767px) {
             .service-form-grid,
             .service-coordinates-preview {
@@ -229,8 +239,8 @@
             <h1>{{ $isArabic ? 'إضافة خدمة جديدة' : 'Create a new service' }}</h1>
             <p>
                 {{ $isArabic
-                    ? 'أدخل بيانات الخدمة، حدّد موقعها على الخريطة، وارفع صورها لتظهر ضمن المنصة بشكل احترافي وواضح.'
-                    : 'Enter the service details, choose its map location, and upload its images so it appears on the platform clearly and professionally.' }}
+                    ? 'أدخل بيانات الخدمة، حدّد موقعها على الخريطة، واختر العملة وارفع صورها لتظهر ضمن المنصة بشكل احترافي وواضح.'
+                    : 'Enter the service details, choose its map location, select the currency, and upload its images so it appears clearly and professionally on the platform.' }}
             </p>
         </section>
 
@@ -238,8 +248,8 @@
             <h2 class="service-form-title">{{ $isArabic ? 'بيانات الخدمة' : 'Service information' }}</h2>
             <p class="service-form-subtitle">
                 {{ $isArabic
-                    ? 'املأ الحقول الأساسية ثم احفظ الخدمة. يمكنك لاحقًا تعديلها أو إضافة صور أكثر.'
-                    : 'Fill in the core fields, then save the service. You can later edit it or add more images.' }}
+                    ? 'املأ الحقول الأساسية ثم احفظ الخدمة. لا يمكن إضافة خدمة إلا عبر حساب أعمال مقبول.'
+                    : 'Fill in the core fields, then save the service. A service can only be added through an approved business account.' }}
             </p>
 
             @if ($errors->any())
@@ -254,7 +264,7 @@
                 <div class="service-form-grid">
                     <div class="service-form-group">
                         <label class="service-label">{{ $isArabic ? 'حساب الأعمال' : 'Business account' }}</label>
-                        <select class="service-select" name="business_account_id">
+                        <select class="service-select" name="business_account_id" required>
                             <option value="">{{ $isArabic ? 'اختر حساب الأعمال' : 'Select business account' }}</option>
                             @foreach ($businessAccounts as $businessAccount)
                                 <option value="{{ $businessAccount->id }}" @selected(old('business_account_id') == $businessAccount->id)>
@@ -269,7 +279,7 @@
 
                     <div class="service-form-group">
                         <label class="service-label">{{ $isArabic ? 'التصنيف' : 'Category' }}</label>
-                        <select class="service-select" name="category_id">
+                        <select class="service-select" name="category_id" required>
                             <option value="">{{ $isArabic ? 'اختر التصنيف' : 'Select category' }}</option>
                             @foreach ($categories as $category)
                                 <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
@@ -284,7 +294,7 @@
 
                     <div class="service-form-group">
                         <label class="service-label">{{ $isArabic ? 'التصنيف الفرعي' : 'Subcategory' }}</label>
-                        <select class="service-select" name="subcategory_id">
+                        <select class="service-select" name="subcategory_id" required>
                             <option value="">{{ $isArabic ? 'اختر التصنيف الفرعي' : 'Select subcategory' }}</option>
                             @foreach ($subcategories as $subcategory)
                                 <option value="{{ $subcategory->id }}" @selected(old('subcategory_id') == $subcategory->id)>
@@ -298,20 +308,41 @@
                     </div>
 
                     <div class="service-form-group">
-                        <label class="service-label">{{ $isArabic ? 'السعر' : 'Price' }}</label>
-                        <input class="service-input" type="number" step="0.01" name="price" value="{{ old('price') }}">
+                        <label class="service-label">{{ $isArabic ? 'السعر الأصلي' : 'Base price' }}</label>
+                        <input class="service-input" type="number" step="0.01" name="price" value="{{ old('price') }}" required>
                         @error('price') <div class="service-error">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="service-form-group">
+                        <label class="service-label">{{ $isArabic ? 'عملة التسعير' : 'Pricing currency' }}</label>
+                        <select class="service-select" name="currency" required>
+                            <option value="SYP" @selected(old('currency', 'SYP') === 'SYP')>
+                                {{ $isArabic ? 'ليرة سورية (SYP)' : 'Syrian Pound (SYP)' }}
+                            </option>
+                            <option value="USD" @selected(old('currency') === 'USD')>
+                                {{ $isArabic ? 'دولار أمريكي (USD)' : 'US Dollar (USD)' }}
+                            </option>
+                        </select>
+                        @error('currency') <div class="service-error">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="service-form-group full">
+                        <div class="service-currency-note">
+                            {{ $isArabic
+                                ? 'هذا هو سعر الخدمة الأساسي عند الحفظ. لاحقاً يمكن عرض السعر للمستخدم حسب عملة العرض المختارة وسعر الصرف.'
+                                : 'This is the base stored price for the service. Later, it can be displayed to users based on their chosen display currency and exchange rate.' }}
+                        </div>
+                    </div>
+
+                    <div class="service-form-group">
                         <label class="service-label">{{ $isArabic ? 'اسم الخدمة بالعربية' : 'Service name (Arabic)' }}</label>
-                        <input class="service-input" type="text" name="name_ar" value="{{ old('name_ar') }}">
+                        <input class="service-input" type="text" name="name_ar" value="{{ old('name_ar') }}" required>
                         @error('name_ar') <div class="service-error">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="service-form-group">
                         <label class="service-label">{{ $isArabic ? 'اسم الخدمة بالإنجليزية' : 'Service name (English)' }}</label>
-                        <input class="service-input" type="text" name="name_en" value="{{ old('name_en') }}">
+                        <input class="service-input" type="text" name="name_en" value="{{ old('name_en') }}" required>
                         @error('name_en') <div class="service-error">{{ $message }}</div> @enderror
                     </div>
 
